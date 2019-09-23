@@ -19,10 +19,28 @@
 import { combineReducers } from 'redux';
 
 import UserState from './UserState';
+import { Schema, StateModel } from '../model/Model';
+import { notebooksSchema } from '../notebooks/Notebooks.state';
+import { projectSchema } from '../model/RenkuModels';
+
+const globalSchema = new Schema({
+  project: { schema: projectSchema },
+  notebooks: { schema: notebooksSchema }
+})
+// const globalModel = new StateModel(globalSchema, "redux_store")
+
 
 // Combine all reducers here
+// const reducer = combineReducers({
+//   user: UserState.reducer,
+//   notebooks: notebooksSchema.reducer()
+// });
+
+// const reducer = globalSchema.reducer()
+
 const reducer = combineReducers({
-  user: UserState.reducer
+  user: UserState.reducer,
+  notebooks: notebooksSchema.reducer()
 });
 
-export { reducer, UserState };
+export { reducer, UserState, globalSchema };

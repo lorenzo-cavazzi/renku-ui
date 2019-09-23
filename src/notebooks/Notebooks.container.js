@@ -19,7 +19,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux'
 
-import { NotebooksModel } from './Notebooks.state';
+import { NotebooksModel, NotebooksController } from './Notebooks.state';
 import { StartNotebookServer as StartNotebookServerPresent } from './Notebooks.present';
 import { Notebooks as NotebooksPresent } from './Notebooks.present';
 import { CheckNotebookIcon } from './Notebooks.present';
@@ -272,7 +272,8 @@ class StartNotebookServer extends Component {
 class Notebooks extends Component {
   constructor(props) {
     super(props);
-    this.model = new NotebooksModel(props.client);
+    // this.model = new NotebooksModel(props.client);
+    this.model = new NotebooksController(props.client, props.globalModel.subModel('notebooks'));
 
     if (props.scope) {
       this.model.setNotebookFilters(props.scope);
@@ -298,7 +299,7 @@ class Notebooks extends Component {
   mapStateToProps(state, ownProps) {
     return {
       handlers: this.handlers,
-      ...state
+      ...state.notebooks
     }
   }
 
@@ -306,7 +307,7 @@ class Notebooks extends Component {
     const VisibleNotebooks = connect(this.mapStateToProps.bind(this))(NotebooksPresent);
 
     return <VisibleNotebooks
-      store={this.model.reduxStore}
+      store={this.props.globalModel.reduxStore}
       user={this.props.user}
       standalone={this.props.standalone ? this.props.standalone : false}
       scope={this.props.scope}
@@ -317,7 +318,7 @@ class Notebooks extends Component {
 
 /**
  * Display the connect to Jupyter icon
- * 
+ *
  * @param {Object} client - api-client used to query the gateway
  * @param {string} filePath - relative path of the target notebook file
  * @param {string} launchNotebookUrl - launch notebook url

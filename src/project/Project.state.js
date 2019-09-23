@@ -292,4 +292,4 @@ class ProjectModel extends StateModel {
   }
 }
 
-export { ProjectModel, GraphIndexingStatus };
+export { ProjectModel, GraphIndexingStatus, projectSchema };
