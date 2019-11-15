@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { Schema } from "../../model";
 import FormGenerator, { FormPanel } from "./";
 
+
 let schema = new Schema({
   name: {
     initial: "",

@@ -7,6 +7,8 @@ COPY package.json package-lock.json /app/
 COPY public /app/public
 COPY src /app/src/
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN npm install --silent && \
     npm run-script build
 

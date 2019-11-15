@@ -29,7 +29,6 @@ import './App.css';
 import { BrowserRouter as Router, Route, Switch, Redirect }  from 'react-router-dom'
 
 import Project from './project/Project'
-import Issue from './issue/Issue'
 import DatasetList from './dataset/list/DatasetList.container'
 import { Landing, LoggedInNavBar, AnonymousNavBar, FooterNavbar } from './landing'
 import { Notebooks } from './notebooks';
@@ -78,12 +77,6 @@ class App extends Component {
                   {...p} />} />
               <Route path="/help"
                 render ={p => <Help key="help" {...p} {...this.props} /> } />
-
-              {/*TODO: This route should be handled by <Route path="/projects/:id(\d+)" too. Until this is the
-                 TODO: case, the issue_new route must be listed BEFORE the project one.   */}
-              <Route exact path="/projects/:projectNamespace/:projectName/issue_new"
-                render={(p) => <Issue.New key="issue_new" projectPathWithNamespace={`${p.match.params.projectNamespace}/${p.match.params.projectName}`} client={this.props.client} {...p}/>}/>
-              {/* pull out the underlying parts of the url and pass them to the project view */}
               <Route path="/projects/:projectNamespace/:projectName"
                 render={p => <Project.View key={`${p.match.params.projectNamespace}/${p.match.params.projectName}`}
                   projectPathWithNamespace={`${p.match.params.projectNamespace}/${p.match.params.projectName}`}

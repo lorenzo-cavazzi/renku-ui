@@ -28,10 +28,10 @@ import ValidationAlert from './ValidationAlert';
 import HelpText from './HelpText';
 import { FormGroup, Input, Label} from 'reactstrap';
 
-function TextInput({ name, label, type, value, alert, setInputs, help }) {
+function TextInput({ name, label, type, value, alert, placeholder, setInputs, help }) {
   return <FormGroup>
     <Label htmlFor={name}>{label}</Label>
-    <Input id={name} name={name} type={type} value={value || ""} onChange={setInputs}/>
+    <Input id={name} name={name} type={type} value={value || ""} onChange={setInputs} placeholder={placeholder}/>
     <HelpText content={help} />
     <ValidationAlert content={alert} />
   </FormGroup>

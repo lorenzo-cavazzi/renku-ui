@@ -175,7 +175,7 @@ class View extends Component {
       overviewDatasetsUrl: `${baseUrl}/overview/datasets`,
       datasetsUrl: `${baseUrl}/datasets`,
       datasetUrl: `${baseUrl}/datasets/:datasetId`,
-      issueNewUrl: `${baseUrl}/issue_new`,
+      issueNewUrl: `${collaborationUrl}/issues/issue_new`,
       collaborationUrl:`${collaborationUrl}`,
       issuesUrl: `${collaborationUrl}/issues`,
       issueUrl: `${collaborationUrl}/issues/:issueIid`,

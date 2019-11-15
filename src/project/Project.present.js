@@ -578,10 +578,14 @@ class ProjectViewCollaboration extends Component {
           <ProjectViewCollaborationNav {...this.props} />
         </Col>
         <Col key="collaborationcontent" sm={12} md={10}>
-          <Route path={ this.props.mergeRequestsOverviewUrl } render={props =>
-            <ProjectMergeRequestList {...this.props} />} />
-          <Route path={ this.props.issuesUrl } render={props =>
-            <ProjectViewIssues {...this.props} /> }/>
+          <Switch>
+            <Route path={ this.props.mergeRequestsOverviewUrl } render={props =>
+              <ProjectMergeRequestList {...this.props} />} />
+            <Route exact path={ this.props.issueNewUrl } render={p =>
+              <Issue.New projectPathWithNamespace={this.props.core.path_with_namespace} client={this.props.client} {...p}/>}/>
+            <Route path={ this.props.issuesUrl } render={props =>
+              <ProjectViewIssues {...this.props} /> }/>
+          </Switch>
         </Col>
       </Row>
     </Col>

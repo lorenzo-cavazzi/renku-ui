@@ -23,7 +23,8 @@
  *
  */
 
-import { Schema } from './Model'
+import { Schema } from './Model';
+import FormGenerator from '../utils/formgenerator/';
 
 const userSchema = new Schema({
   name: {initial: '', mandatory: false},
@@ -209,5 +210,46 @@ const notebooksSchema = new Schema({
   }
 });
 
+const issueFormSchema = new Schema({
+  name: {
+    initial: "",
+    name: 'title',
+    label: 'Title',
+    type: 'text',
+    placeholder: 'A brief name to identify the issue',
+    validators: [{
+      id: 'text-length',
+      isValidFun: expression => FormGenerator.Validators.isNotEmpty(expression),
+      alert: 'Text is too short'
+    }]
+  },
+  description: {
+    initial: "",
+    name: 'textarea',
+    label: 'Description',
+		type: 'cktextarea',
+		outputType:'markdown',
+    placeholder: 'A brief name to identify the issue',
+    help: 'A description of the issue helps users understand it and is highly recommended.',
+    validators: [{
+      id: 'textarea-length',
+      isValidFun: expression => FormGenerator.Validators.isNotEmpty(expression),
+      alert: 'Description can\'t be emtpy'
+    }]
+  },
+  visibility: {
+    initial: 'public',
+    name: 'visibility',
+    label: 'Visibility',
+    type: 'select',
+    options: [
+      { value: 'public', name: 'Public' },
+      { value: 'restricted', name: 'Restricted' }
+    ],
+    validators: []
+  }
+})
+
 export { userSchema, metaSchema, displaySchema, newProjectSchema, projectSchema, forkProjectSchema };
 export { notebooksSchema };
+export { issueFormSchema };

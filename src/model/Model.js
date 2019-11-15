@@ -51,7 +51,10 @@ const PropertyName = {
   TYPE:'type',
   PARSEFUN:'parseFun',
   VALIDATORS:'validators',
-  HELP: 'help'
+  HELP: 'help',
+  OPTIONS: 'options',
+  PLACEHOLDER: 'placeholder',
+  OUTPUTTYPE:'outputType'
 };
 
 // Named consts for the bindings to the store.

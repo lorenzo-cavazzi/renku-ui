@@ -27,6 +27,7 @@ import React from 'react';
 import { Form, Button, Col } from 'reactstrap';
 import useForm from './UseForm';
 import TextInput from './fields/TextInput';
+import SelectInput from './fields/SelectInput';
 import CktextareaInput from './fields/CKEditorTextArea';
 import FilepondInput from './fields/FilepondInput';
 import './FormGenerator.css'
@@ -37,7 +38,7 @@ function FormPanel({ title, btnName, submitCallback, model }) {
 
   const [inputs, setInputs, setSubmit] = useForm(modelValues, submitCallback);
 
-  const Components = { TextInput, CktextareaInput, FilepondInput };
+  const Components = { TextInput, CktextareaInput, FilepondInput, SelectInput };
 
   const capitalize = expression => expression.charAt(0).toUpperCase() + expression.slice(1);
 

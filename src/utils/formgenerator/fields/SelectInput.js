@@ -19,22 +19,24 @@
 /**
  *  renku-ui
  *
- *  FormGenerator.js
+ *  SelectInput.js
  *  Presentational components.
  */
 
-/* 
-* To change css properties from CKEditor see:
-*	https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/theme-customization.html
-*/
+import * as React from 'react';
+import ValidationAlert from './ValidationAlert';
+import HelpText from './HelpText';
+import { FormGroup, Input, Label} from 'reactstrap';
 
-:root {
-	--ck-border-radius: 4px;
-	--ck-font-size-base: 14px;
-	--ck-custom-border: hsl(300, 1%, 22%);
-	--ck-color-focus-border: var(--ck-color-base-border);
+function SelectInput({ name, label, type, value, alert, options, initial, placeholder, setInputs, help }) {
+  return <FormGroup>
+    <Label htmlFor={name}>{label}</Label>
+    <Input id={name} name={name} type={type} value={value || ""} onChange={setInputs} placeholder={placeholder}>
+      {options && options.map(option => <option key={option.value} value={option.value}>{option.name}</option>)}
+    </Input>
+    <HelpText content={help} />
+    <ValidationAlert content={alert} />
+  </FormGroup>
 }
 
-.ck-editor__editable :focus{
-	border:  var(--ck-color-base-border);
-}
+export default SelectInput;
