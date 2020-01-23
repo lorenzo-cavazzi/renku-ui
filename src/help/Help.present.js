@@ -32,6 +32,11 @@ import { Row, Col } from 'reactstrap';
 import { Nav, NavItem } from 'reactstrap';
 
 
+function ExternalDocsLink(props) {
+  return <a href={props.url} target="_blank" rel="noreferrer noopener">{props.title}</a>
+}
+
+
 class HelpNav extends Component {
   render() {
     return (
@@ -48,7 +53,7 @@ class HelpNav extends Component {
         <NavItem>
           <RenkuNavLink to={this.props.url.setup} title="Set Up / Admin" />
         </NavItem>
-      </Nav> 
+      </Nav>
     )
   }
 }
@@ -57,19 +62,23 @@ class HelpGetting extends Component {
   render() {
     return (
       <div>
+        <h2>Discourse</h2>
+        <p>
+          We maintain a forum on <ExternalDocsLink url="https://renku.discourse.group" title="Discourse" /> for
+          discussion about Renku. This is a good place to ask questions and find answers.
+        </p>
         <h2>Gitter</h2>
         <p>
-          Want to reach out to the development team? Contact us
-          on <a href="https://gitter.im/SwissDataScienceCenter/renku" target="_blank" rel="noreferrer noopener">
-            Gitter</a>,
+          Want to reach out to the development team live? Contact us
+          on <ExternalDocsLink url="https://gitter.im/SwissDataScienceCenter/renku" title="Gitter" />,
           we would be happy to chat with you.
         </p>
         <h2>GitHub</h2>
         <p>
           Renku is open source and being developed
-          on <a href="https://github.com/SwissDataScienceCenter/renku" target="_blank" rel="noreferrer noopener">
-            GitHub</a>.
-          We encourage you to contact us with questions, comments, issues, or any kind of feedback.
+          on <ExternalDocsLink url="https://github.com/SwissDataScienceCenter/renku" title="GitHub" />.
+          This is the best place to report issues and ask for new features, but feel free to contact us with
+          questions, comments, or any kind of feedback.
         </p>
       </div>
     )
@@ -82,7 +91,7 @@ class HelpTutorials extends Component {
       <div>
         <h2>First steps</h2>
         <p>
-          If you are here for the first time or you are not sure how to use Renku, we reccomend you to go through
+          If you are here for the first time or you are not sure how to use Renku, we recommend you to go through
           our <a href="https://renku.readthedocs.io/en/latest/user/firststeps.html"
             target="_blank" rel="noreferrer noopener">tutorial</a>.
         </p>
@@ -145,17 +154,17 @@ class HelpSetup extends Component {
 class HelpContent extends Component {
   render() {
     return [
-      <Route exact path={this.props.url.base} key="base" 
+      <Route exact path={this.props.url.base} key="base"
         render={props => <HelpGetting key="getting" {...this.props} />} />,
-      <Route path={this.props.url.getting} key="getting" 
+      <Route path={this.props.url.getting} key="getting"
         render={props => <HelpGetting key="getting" {...this.props} />} />,
-      <Route path={this.props.url.tutorials} key="tutorials" 
+      <Route path={this.props.url.tutorials} key="tutorials"
         render={props => <HelpTutorials key="tutorials" {...this.props} />} />,
-      <Route path={this.props.url.features} key="features" 
+      <Route path={this.props.url.features} key="features"
         render={props => <HelpFeatures key="features" {...this.props} />} />,
-      <Route path={this.props.url.setup} key="setup" 
+      <Route path={this.props.url.setup} key="setup"
         render={props => <HelpSetup key="setup" {...this.props} />} />,
-    ]        
+    ]
   }
 }
 
