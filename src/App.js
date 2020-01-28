@@ -31,36 +31,27 @@ import { BrowserRouter as Router, Route, Switch, Redirect }  from 'react-router-
 import Project from './project/Project'
 import Issue from './issue/Issue'
 import DatasetList from './dataset/list/DatasetList.container'
-import { Landing, LoggedInNavBar, AnonymousNavBar, FooterNavbar } from './landing'
+import { Landing, RenkuNavBar, FooterNavbar } from './landing'
 import { Notebooks } from './notebooks';
 import { Login } from './authentication'
 import Help from './help'
 import NotFound from './not-found'
-import { UserAvatar } from './utils/UIComponents'
 import ShowDataset from './dataset/Dataset.container'
-
-class RenkuNavBar extends Component {
-
-  render() {
-    const user = this.props.userState.getState().user || {};
-    return (user.id) ? <LoggedInNavBar {...this.props} /> : <AnonymousNavBar {...this.props} />
-  }
-}
-
-class RenkuFooter extends Component {
-  render() {
-    return <FooterNavbar {...this.props} />
-  }
-}
 
 
 class App extends Component {
   render() {
-    const userAvatar = <UserAvatar userState={this.props.userState} />;
+    const user = this.props.model.get("user"); // TODO: change to user
+    const projects = this.props.model.get("projects");
+    console.log("App: ", projects.featured.starred);
+    // console.log(user)
+
     return (
       <Router>
         <div>
-          <Route render={props => <RenkuNavBar userAvatar={userAvatar} {...props} {...this.props}/>} />
+          <Route render={props =>
+            <RenkuNavBar newUser={user} {...props} {...this.props} /> // TODO: remove newUser
+          } />
           <main role="main" className="container-fluid">
             <div key="gap">&nbsp;</div>
             <Switch>
@@ -72,9 +63,9 @@ class App extends Component {
               <Route exact path="/"
                 render={p => <Landing.Home
                   key="landing" welcomePage={this.props.params['WELCOME_PAGE']}
-                  user={this.props.userState.getState().user}
-                  userStateDispatch={this.props.userState.dispatch}
+                  user={user}
                   client={this.props.client}
+                  model={this.props.model}
                   {...p} />} />
               <Route path="/help"
                 render ={p => <Help key="help" {...p} {...this.props} /> } />
@@ -86,7 +77,7 @@ class App extends Component {
               <Route exact path={["/projects", "/projects/starred", "/projects/search"]} render={
                 p => <Project.List
                   key="projects"
-                  user={this.props.userState.getState().user}
+                  user={user}
                   client={this.props.client}
                   {...p}
                 />}
@@ -99,6 +90,8 @@ class App extends Component {
                   client={this.props.client}
                   params={this.props.params}
                   model={this.props.model}
+                  projects={projects}
+                  newUser={user}
                   user={this.props.userState.getState().user}
                   userStateDispatch={this.props.userState.dispatch}
                   {...p}
@@ -145,7 +138,7 @@ class App extends Component {
                 render={p => <NotFound {...p} />} />
             </Switch>
           </main>
-          <Route component={RenkuFooter} />
+          <Route component={FooterNavbar} />
         </div>
       </Router>
     );

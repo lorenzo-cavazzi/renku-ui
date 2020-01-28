@@ -30,7 +30,8 @@ import { Provider, connect } from 'react-redux'
 import { createStore } from '../utils/EnhancedState'
 import Present from './Landing.present'
 import State from './Landing.state'
-import { UserState } from '../app-state'
+
+import { ProjectsCoordinator } from '../project/shared';
 
 function urlMap() {
   return {
@@ -42,34 +43,24 @@ function urlMap() {
 }
 
 
-class Starred extends Component {
-  render() {
-    const user = this.props.user;
-    const projects = (user) ? user.starredProjects : [];
-    return <Present.Starred urlMap={this.props.urlMap} projects={projects} welcomePage={this.props.welcomePage} />
-  }
-}
-
-
 class Home extends Component {
   constructor(props) {
     super(props);
     this.store = createStore(State.Home.reduce);
+
+    this.projectsCoordinator = new ProjectsCoordinator(props.client, props.model.subModel("projects"));
   }
 
-  UNSAFE_componentWillMount(){
-    UserState.reSetAllProjects(this.props.client, this.props.userStateDispatch, 
-      this.props.user.starredProjects, this.props.user.memberProjects);
+  componentDidMount() {
+    this.projectsCoordinator.getFeatured();
   }
 
   mapStateToProps(state, ownProps) {
     const urls = urlMap();
     const local = {
-      starred: <Starred user={ownProps.user} urlMap={urls} welcomePage={ownProps.welcomePage}/>,
-      user: ownProps.user,
       urlMap: urls
     };
-    return {...state, ...local}
+    return { ...state, ...local }
   }
 
 
@@ -89,8 +80,8 @@ class Home extends Component {
       <Provider key="new" store={this.store}>
         <VisibleHome
           welcomePage={atob(this.props.welcomePage)}
-          loggedIn={this.props.user.id ? true : false}
           user={this.props.user}
+          projects={this.props.model.get("projects.featured")}
         />
       </Provider>
     ]

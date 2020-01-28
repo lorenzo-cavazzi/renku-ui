@@ -20,6 +20,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux'
 import ProjectList from './ProjectList.present'
 import ProjectListModel from './ProjectList.state'
+import { Loader } from '../../utils/UIComponents';
 import qs from 'query-string';
 
 const orderByValuesMap = {
@@ -48,12 +49,14 @@ const urlMap = {
 }
 
 class List extends Component {
-  render(){
-    //this prevents everything from loading until the user is available
-    //user.available doesn't determine weather the user is or not logged in
-    return this.props.user.available === false ? 
-      null:
-      <AvailableUserList {... this.props} />;
+  render() {
+    const user = this.props.user; // TODO: change to user
+    return user.fetched ?
+      <AvailableUserList {...this.props} /> :
+      <div>
+        <h1>Projects</h1>
+        <Loader />
+      </div>
   }
 }
 
@@ -88,7 +91,7 @@ class AvailableUserList extends Component {
     this.model.setSelectedUserOrGroup(selectedUserOrGroup);
     this.model.setUsersOrGroupsList([]);
     this.model.setOrderSearchAsc(orderSearchAsc);
-    this.model.setLoggedIn(this.props.user.id ? true : false);
+    this.model.setLoggedIn(this.props.user.logged);
     this.model.setPage(pageNumber);
     // save listener to remove it when unmounting the component
     // TODO: this could be removed if onPaginationPageChange/this.props.history.push worked

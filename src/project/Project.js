@@ -24,12 +24,13 @@
  */
 
 import React, { Component } from 'react';
-import { connect } from 'react-redux'
+import { connect } from 'react-redux';
 
 import { StateKind } from '../model/Model';
-import Present from './Project.present'
+import Present from './Project.present';
 
-import { ProjectModel, GraphIndexingStatus } from './Project.state'
+import { ProjectModel, GraphIndexingStatus } from './Project.state';
+import { ProjectsCoordinator } from './shared';
 import Issue from '../issue/Issue';
 import { FileLineage } from '../file'
 import { ACCESS_LEVELS } from '../api-client';
@@ -133,6 +134,17 @@ class View extends Component {
   constructor(props) {
     super(props);
     this.projectState = new ProjectModel(StateKind.REDUX);
+    this.projectsCoordinator = new ProjectsCoordinator(props.client, props.model.subModel("projects"));
+
+    // fetch useful projects data in not yet loaded
+    // const { featured } = props.projects;
+    // if (!featured.fetched && !featured.fetching) {
+    //   this.projectsCoordinator.getFeatured();
+    // }
+    const featured = props.model.get("projects.featured");
+    if (!featured.fetched && !featured.fetching) {
+      this.projectsCoordinator.getFeatured();
+    }
   }
 
   UNSAFE_componentWillMount() {
@@ -146,7 +158,7 @@ class View extends Component {
     const pathComponents = splitProjectSubRoute(this.props.match.url);
     if (pathComponents.projectPathWithNamespace != null) {
       // fetch only if user data are already loaded
-      if (this.props.user.available === true) {
+      if (this.props.newUser.fetched) {
         this.fetchAll();
       }
 
@@ -166,7 +178,7 @@ class View extends Component {
 
   componentDidUpdate(prevProps) {
     // re-fetch when user data are available
-    if (prevProps.user.available !== true && this.props.user.available === true) {
+    if (!prevProps.newUser.fetched && this.props.newUser.fetched) {
       this.fetchAll();
     }
     const prevPathComps = splitProjectSubRoute(prevProps.match.url);
@@ -186,7 +198,7 @@ class View extends Component {
   async fetchBranches() { return this.projectState.fetchBranches(this.props.client); }
   async createGraphWebhook() { return this.projectState.createGraphWebhook(this.props.client); }
   async stopCheckingWebhook() { this.projectState.stopCheckingWebhook(); }
-  async fetchGraphWebhook() { this.projectState.fetchGraphWebhook(this.props.client, this.props.user); }
+  async fetchGraphWebhook() {this.projectState.fetchGraphWebhook(this.props.client, this.props.newUser); }
   async fetchProjectFilesTree() {
     return this.projectState.fetchProjectFilesTree(this.props.client, this.cleanCurrentURL());
   }
@@ -203,7 +215,7 @@ class View extends Component {
     const pathComponents = splitProjectSubRoute(this.props.match.url);
     if (pathComponents.projectPathWithNamespace)
       await this.fetchProject();
-    if (this.props.user.id)
+    if (this.props.newUser.logged)
       this.checkGraphWebhook();
   }
 
@@ -249,10 +261,12 @@ class View extends Component {
     }
   }
 
-  getStarred(user) {
-    if (user && user.starredProjects) {
-      return user.starredProjects.map((project) => project.id).indexOf(this.projectState.get('core.id')) >= 0
-    }
+  getStarred() {
+    const { featured } = this.props.projects;
+    // return false until data are available
+    if (!featured.fetched)
+      return false;
+    return featured.starred.map((project) => project.id).indexOf(this.projectState.get('core.id')) >= 0;
   }
 
   getSubUrls() {
@@ -414,7 +428,7 @@ class View extends Component {
         toogleForkModal={this.eventHandlers.toogleForkModal}
         history={this.props.history}
         client={this.props.client}
-        user={this.props.user} />
+        user={this.props.newUser} />
 
     }
   }
@@ -429,12 +443,22 @@ class View extends Component {
     onStar: (e) => {
       e.preventDefault();
       const user = this.props.user;
-      if (!(user && user.id != null)) {
-        alertError('Please login to star a project.');
-        return;
-      }
-      const starred = this.getStarred(this.props.user);
-      this.projectState.star(this.props.client, this.props.userStateDispatch, starred)
+      //console.log({...this.props})
+      // if (!(user && user.id != null)) {
+      //   alertError('Please login to star a project.');
+      //   return;
+      // }
+      const starred = this.getStarred();
+      this.projectState.star(this.props.client, starred).then((project) => {
+        const result = this.projectsCoordinator.updateStarred(project, !starred);
+        //console.log(result);
+        //console.log(this.props.model.get("projects.featured.starred"))
+
+        //console.log(isStarred)
+        // if (isStarred) {
+
+        // }
+      });
     },
     toogleForkModal: (e) => {
       e.preventDefault();
@@ -492,7 +516,7 @@ class View extends Component {
   mapStateToProps(state, ownProps) {
     const pathComponents = splitProjectSubRoute(ownProps.match.url);
     const internalId = this.projectState.get('core.id') || parseInt(ownProps.match.params.id, 10);
-    const starred = this.getStarred(ownProps.user);
+    const starred = this.getStarred();
     const settingsReadOnly = state.visibility.accessLevel < ACCESS_LEVELS.MAINTAINER;
     const suggestedMRBranches = this.getMrSuggestions();
     const externalUrl = this.projectState.get('core.external_url');

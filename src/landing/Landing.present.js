@@ -31,7 +31,7 @@ import { Link }  from 'react-router-dom'
 
 import { Row, Col } from 'reactstrap';
 import { Jumbotron } from 'reactstrap';
-import { RenkuMarkdown } from '../utils/UIComponents';
+import { RenkuMarkdown, Loader } from '../utils/UIComponents';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClone, faCloudUploadAlt as faCloudUp, faCodeBranch  } from '@fortawesome/free-solid-svg-icons';
@@ -75,9 +75,13 @@ class YourProjects extends Component {
     const projectsUrl = this.props.urlMap.projectsUrl;
     const projectsSearchUrl = this.props.urlMap.projectsSearchUrl;
     let projectsComponent = null;
-    if (projects.length > 0) {
+    if (this.props.loading) {
+      projectsComponent = <Loader key="loader" />;
+    }
+    else if (projects.length > 0) {
       projectsComponent = truncatedProjectListRows(projects, projectsUrl, projectsUrl);
-    } else {
+    }
+    else {
       const projectNewUrl = this.props.urlMap.projectNewUrl;
       projectsComponent = <YourEmptyProjects key="empty-projects" projectsSearchUrl={projectsSearchUrl}
         projectNewUrl={projectNewUrl} welcomePage={this.props.welcomePage} />
@@ -119,8 +123,11 @@ class Starred extends Component {
     const projects = this.props.projects || [];
     const projectsUrl = this.props.urlMap.projectsUrl;
     let projectsComponent = null;
-    if (projects.length > 0)
-      projectsComponent = projectsComponent = truncatedProjectListRows(projects, projectsUrl, this.props.urlMap.projectsStarredUrl);
+    if (this.props.loading) {
+      projectsComponent = <Loader key="loader" />;
+    }
+    else if (projects.length > 0)
+      projectsComponent = truncatedProjectListRows(projects, projectsUrl, this.props.urlMap.projectsStarredUrl);
     else {
       const projectNewUrl = this.props.urlMap.projectNewUrl;
       const projectsSearchUrl = this.props.urlMap.projectsSearchUrl;
@@ -243,14 +250,13 @@ class LoggedInHome extends Component {
   render() {
     const urlMap = this.props.urlMap;
 
-    const user = this.props.user;
-    const starredProjects = (user) ? user.starredProjects : [];
-    const memberProjects = (user) ? user.memberProjects : [];
+    const { user, projects } = this.props;
+    const neverLoaded = projects.fetched ? false : true;
 
     return [
       <Row key="username">
         <Col>
-          <h1>{user.username} @ Renku</h1>
+          <h1>{user.data.username} @ Renku</h1>
         </Col>
       </Row>,
       <Row key="spacer"><Col md={12}>&nbsp;</Col></Row>,
@@ -258,13 +264,14 @@ class LoggedInHome extends Component {
         <Col xs={{order:2}} md={{size: 4, order: 1}}>
           <Row>
             <Col>
-              <YourProjects urlMap={urlMap} projects={memberProjects} />
+              <YourProjects urlMap={urlMap} loading={neverLoaded} projects={projects.member} />
             </Col>
           </Row>
           <Row key="spacer"><Col md={12}>&nbsp;</Col></Row>
           <Row>
             <Col>
-              <Starred urlMap={urlMap} projects={starredProjects} welcomePage={this.props.welcomePage} />
+              <Starred welcomePage={this.props.welcomePage}
+                urlMap={urlMap} loading={neverLoaded} projects={projects.starred} />
             </Col>
           </Row>
         </Col>
@@ -278,8 +285,10 @@ class LoggedInHome extends Component {
 
 class Home extends Component {
   render() {
-    const loggedIn = this.props.user.id ? true : false;
-    return (loggedIn) ? <LoggedInHome {...this.props} /> : <AnonymousHome {...this.props} />
+    //const loggedIn = this.props.user.logged ? true : false;
+    return (this.props.user.logged ) ?
+      <LoggedInHome {...this.props} /> :
+      <AnonymousHome {...this.props} />;
   }
 }
 

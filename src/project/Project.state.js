@@ -49,14 +49,14 @@ class ProjectModel extends StateModel {
   }
 
   fetchGraphWebhook(client, user) {
-    if (user == null) {
+    if (!user) {
       this.set('webhook.possible', false);
+      return;
     }
-    const userIsOwner = this.get('core.owner.id') === user.id;
+    const userIsOwner = this.get('core.owner.id') === user.data.id;
     this.set('webhook.possible', userIsOwner);
-    if (userIsOwner) {
+    if (userIsOwner)
       this.fetchGraphWebhookStatus(client, this.get('core.id'));
-    }
   }
 
   fetchGraphStatus(client) {
@@ -341,11 +341,29 @@ class ProjectModel extends StateModel {
     this.set("forkModalOpen" , forkModalOpen === undefined || forkModalOpen === false ? true : false);
   }
 
-  star(client, userStateDispatch, starred) {
-    client.starProject(this.get('core.id'), starred).then(() => {
-      // TODO: Bad naming here - will be resolved once the user state is re-implemented.
-      this.fetchProject(client, this.get('core.id'))
-        .then(p => userStateDispatch(UserState.star(p.metadata.core)))
+  // star(client, userStateDispatch, starred) {
+  //   client.starProject(this.get('core.id'), starred).then(() => {
+  //     // TODO: Bad naming here - will be resolved once the user state is re-implemented.
+  //     this.fetchProject(client, this.get('core.id'))
+  //       .then(p => userStateDispatch(UserState.star(p.metadata.core)))
+  //   })
+  // }
+  star(client, starred) {
+    return client.starProject(this.get('core.id'), starred).then((resp) => {
+      //console.log(this.get());
+      const isStarred = !starred;
+      let stars = this.get("system.star_count");
+      if (isStarred)
+        stars++;
+      else
+        stars--;
+
+      console.log("isStarred: ", isStarred, "num: ", stars)
+
+      this.set("system.star_count", stars);
+      return resp.data;
+      // this.fetchProject(client, this.get('core.id'))
+      //   .then(p => userStateDispatch(UserState.star(p.metadata.core)))
     })
   }
 }

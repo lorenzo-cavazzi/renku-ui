@@ -23,7 +23,7 @@ const Actions = {
   SET_MEMBER_PROJECTS: 'UserState.SET_MEMBER_PROJECTS',
   STAR_PROJECT: 'UserState.STAR_PROJECT',
   REFRESH_USER_PROJECTS: 'UserState.REFRESH_USER_PROJECTS',
-  REFRESH_STARRED_PROJECTS: 'UserState.REFRESH_STARRED_PROJECTS',
+  // REFRESH_STARRED_PROJECTS: 'UserState.REFRESH_STARRED_PROJECTS',
   RESET_ALL_PROJECTS: 'UserState.RESET_ALL_PROJECTS'
 }
 
@@ -88,9 +88,9 @@ const UserState = {
   reSetMember: (projects) => {
     return {type: Actions.REFRESH_USER_PROJECTS, payload: projects}
   },
-  reSetStarred: (projects) => {
-    return {type: Actions.REFRESH_STARRED_PROJECTS, payload: projects}
-  },
+  // reSetStarred: (projects) => {
+  //   return {type: Actions.REFRESH_STARRED_PROJECTS, payload: projects}
+  // },
   reSetAllProjects: (client, dispatch, oldStarredProjects, oldMemberProjects) => {
     client.getProjects({starred: true, order_by: 'last_activity_at'})
       .then((projectResponse) => {
@@ -138,11 +138,11 @@ const UserState = {
       const reducedProjects = projects.data.map((project) => starredProjectMetadata(project));
       return {...state, memberProjects: reducedProjects}
     }
-    case Actions.REFRESH_STARRED_PROJECTS: {
-      const projects = action.payload;
-      const reducedProjects = projects.data.map((project) => starredProjectMetadata(project));
-      return {...state, starredProjects: reducedProjects}
-    }
+    // case Actions.REFRESH_STARRED_PROJECTS: {
+    //   const projects = action.payload;
+    //   const reducedProjects = projects.data.map((project) => starredProjectMetadata(project));
+    //   return {...state, starredProjects: reducedProjects}
+    // }
     default:
       return state;
     }

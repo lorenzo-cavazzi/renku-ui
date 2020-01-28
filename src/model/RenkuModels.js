@@ -26,9 +26,25 @@
 import { Schema } from './Model'
 
 const userSchema = new Schema({
-  name: {initial: '', mandatory: false},
-  username: {initial: '', mandatory: true},
-  avatarUrl: {initial: '', mandatory: false}
+  fetched: { initial: null, mandatory: true }, // will basically substitute "available"
+  fetching: { initial: false, mandatory: true }, // better than having only available -- for the spinner
+  logged: { initial: false, mandatory: true },
+  data: { initial: {}, mandatory: true }
+
+  // name: {initial: '', mandatory: false},
+  // username: {initial: '', mandatory: true},
+  // avatarUrl: {initial: '', mandatory: false}
+});
+
+const projectsSchema = new Schema({
+  featured: {
+    schema: new Schema({
+      fetched: { initial: null, mandatory: true },
+      fetching: { initial: false, mandatory: true },
+      starred: { initial: [], mandatory: true },
+      member: { initial: [], mandatory: true },
+    })
+  }
 });
 
 const metaSchema = new Schema({
@@ -219,4 +235,4 @@ const notebooksSchema = new Schema({
 });
 
 export { userSchema, metaSchema, displaySchema, newProjectSchema, projectSchema, forkProjectSchema };
-export { notebooksSchema };
+export { notebooksSchema, projectsSchema };

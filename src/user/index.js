@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 - Swiss Data Science Center (SDSC)
+ * Copyright 2020 - Swiss Data Science Center (SDSC)
  * A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
  * Eidgenössische Technische Hochschule Zürich (ETHZ).
  *
@@ -19,12 +19,9 @@
 /**
  *  renku-ui
  *
- *  shared
- *  Shared components for projects.
+ *  Components for interacting with user
  */
 
-import { ProjectTags, ProjectTagList } from './ProjectTag.container';
-import { ProjectsCoordinator } from './Projects.state';
+import { UserCoordinator } from './User.state';
 
-export { ProjectTags, ProjectTagList };
-export { ProjectsCoordinator };
+export { UserCoordinator };

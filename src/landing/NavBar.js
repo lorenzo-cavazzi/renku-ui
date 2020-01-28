@@ -31,11 +31,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons/';
 
 import logo from './logo.svg';
-import { RenkuNavLink, Loader } from '../utils/UIComponents'
+import { RenkuNavLink, Loader, UserAvatar } from '../utils/UIComponents'
 import { getActiveProjectPathWithNamespace } from '../utils/HelperFunctions'
 import QuickNav from '../utils/quicknav'
 
 import './NavBar.css';
+
+
+class RenkuNavBar extends Component {
+  render() {
+    const user = this.props.newUser; // TODO: change to user
+    const userAvatar = <UserAvatar person={user.data} size="sm" />;
+
+    return (user.logged) ?
+      <LoggedInNavBar {...this.props} userAvatar={userAvatar} /> :
+      <AnonymousNavBar {...this.props} userAvatar={userAvatar} />;
+  }
+}
 
 class RenkuToolbarItemUser extends Component {
   render() {
@@ -202,4 +214,4 @@ class FooterNavbar extends Component {
   }
 }
 
-export { LoggedInNavBar, AnonymousNavBar, FooterNavbar }
+export { RenkuNavBar, FooterNavbar }

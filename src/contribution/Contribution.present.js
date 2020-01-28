@@ -22,7 +22,7 @@ import { Row, Col, Button, Input, TabContent, TabPane, NavItem,
 import classnames from 'classnames';
 import Collapse from 'react-collapse';
 
-import { Avatar, TimeCaption, RenkuMarkdown } from '../utils/UIComponents'
+import { UserAvatar, TimeCaption, RenkuMarkdown } from '../utils/UIComponents'
 import { FilePreview } from '../file';
 import { ContributionBody as ContributionBodyContainer } from './Contribution.container';
 import { EDIT, PREVIEW } from './Contribution.constants';
@@ -42,7 +42,7 @@ class Contribution extends React.Component {
       <br/>
       <Row>
         <Col key="image" md={1}  sm={1} className="float-right text-center" style={{maxWidth:'62px'}}>
-          <Avatar size="lg" person={contribution.author} />
+          <UserAvatar size="lg" person={contribution.author} />
           <small className="d-sm-inline-flex text-center">
             {contribution.author ? contribution.author.name : null}
           </small>

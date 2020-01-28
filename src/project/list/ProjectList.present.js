@@ -22,7 +22,7 @@ import { Row, Col, Alert } from 'reactstrap';
 import { Button, Form, InputGroup, FormText, Input, Label, ButtonGroup } from 'reactstrap';
 import { Nav, NavItem, InputGroupButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 
-import { Avatar, Loader, Pagination,  TimeCaption , RenkuNavLink } from '../../utils/UIComponents';
+import { UserAvatar, Loader, Pagination,  TimeCaption , RenkuNavLink } from '../../utils/UIComponents';
 import { ProjectTagList } from '../shared';
 import { faCheck, faSortAmountDown, faSortAmountUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -43,7 +43,7 @@ class ProjectListRow extends Component {
     }
     return (
       <div className="d-flex project-list-row mb-3">
-        <div className="mr-2"><Avatar person={this.props.owner} /></div>
+        <div className="mr-2"><UserAvatar person={this.props.owner} /></div>
         <div>
           <p className="mb-1"><b>{title}</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<ProjectTagList taglist={this.props.tag_list} /></p>
           <span>{description} <TimeCaption caption="Updated" time={this.props.last_activity_at} /></span>
@@ -217,7 +217,7 @@ class UsersRow extends Component{
 class ProjectsSearch extends Component {
   render() {
     const loading = this.props.loading || false;
-    const hasUser = this.props.user.id ? true : false;
+    const hasUser = this.props.user.logged;
     const forbidden = this.props.searchIn !== this.props.searchInValuesMap.PROJECTNAME && !hasUser;
     return [<Row key="form">
       {
@@ -297,8 +297,9 @@ class NotFoundInsideProject extends Component {
 
 class ProjectList extends Component {
   render() {
-    if(this.props.user.available === false) return "" ;
-    const hasUser = this.props.user.id ? true : false;
+    if (!this.props.user.fetched)
+      return null;
+    const hasUser = this.props.user.logged;
     const urlMap = this.props.urlMap;
 
     return [

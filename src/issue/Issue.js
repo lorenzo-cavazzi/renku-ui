@@ -35,7 +35,7 @@ import { Badge , ListGroup, ListGroupItem } from 'reactstrap'
 
 import {createStore} from '../utils/EnhancedState'
 import State from './Issue.state'
-import { Avatar, ExternalIconLink, FieldGroup, RenkuMarkdown, TimeCaption, TooltipToggleButton } from '../utils/UIComponents'
+import { UserAvatar, ExternalIconLink, FieldGroup, RenkuMarkdown, TimeCaption, TooltipToggleButton } from '../utils/UIComponents'
 import { Contribution, NewContribution } from '../contribution'
 import { Card, CardHeader, CardBody } from 'reactstrap';
 import { faGitlab } from '@fortawesome/free-brands-svg-icons';
@@ -189,7 +189,7 @@ class IssueViewHeader extends Component {
         activeIcon={faExpand} inactiveIcon={faCompress} />
 
     return <Row><Col key="image" md={1} sm={1} className="float-right text-center" style={{maxWidth:'62px'}}>
-      <Avatar size="lg" person={this.props.author} />
+      <UserAvatar size="lg" person={this.props.author} />
       <small className="d-sm-inline-flex text-center">{this.props.author ? this.props.author.name : null}</small>
     </Col>
     <Col key="body" md={10} sm={10} className="float-left">
@@ -341,7 +341,7 @@ class IssueListRow extends Component {
 
     return <ListGroupItem>
       <span className="issue-title text-break">
-        <span className="pr-2"><Avatar size="sm" person={this.props.author} /></span>{title}
+        <span className="pr-2"><UserAvatar size="sm" person={this.props.author} /></span>{title}
       </span>
       <div className="float-right">{timeBadge}</div>
       <div className="float-right pr-2">{issueState}</div>

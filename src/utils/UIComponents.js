@@ -27,7 +27,6 @@
 import _ from 'lodash/util';
 
 import React, { Component, useState } from 'react';
-import { Provider, connect } from 'react-redux';
 
 import { Link, NavLink as RRNavLink }  from 'react-router-dom'
 
@@ -45,15 +44,22 @@ import ReactClipboard from 'react-clipboard.js';
 
 import { sanitizedHTMLFromMarkdown } from './HelperFunctions';
 
-class Avatar extends Component {
+/**
+ * Show user avatar
+ * 
+ * @param {string} size - image size (sm, md, lg). Default is 'lg'
+ * @param {string} person - user data object, as returned by /user api.
+ *   It must contain at least `avatar_url` and `username`
+ */
+class UserAvatar extends Component {
   computeWidgetSize() {
     const size = this.props.size || 'lg';
-    let widgetSize = {img: 36, fa: '2x'};
-    switch(size) {
-    case 'sm': widgetSize = {img: 18, fa: null}; break;
-    case 'md': widgetSize = {img: 18*2, fa: '2x'}; break;
-    case 'lg': widgetSize = {img: 18*3, fa: '3x'}; break;
-    default: break;
+    let widgetSize = { img: 36, fa: '2x' };
+    switch (size) {
+      case 'sm': widgetSize = { img: 18, fa: null }; break;
+      case 'md': widgetSize = { img: 18 * 2, fa: '2x' }; break;
+      case 'lg': widgetSize = { img: 18 * 3, fa: '3x' }; break;
+      default: break;
     }
     return widgetSize;
   }
@@ -72,7 +78,7 @@ class Avatar extends Component {
     return (img) ?
       <img width={widgetSize.img} src={img} alt={user} /> :
       <FontAwesomeIcon alt={user} icon={faUser} size={widgetSize.fa}
-        style={{textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)'}} />;
+        style={{ textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)' }} />;
   }
 }
 
@@ -153,32 +159,6 @@ class RenkuNavLink extends Component {
       this.props.to;
     const exact = (this.props.exact != null) ? this.props.exact : true;
     return <NavLink exact={exact} to={to} isActive={this.isActive} tag={RRNavLink}>{title}</NavLink>
-  }
-}
-
-class UserAvatarPresent extends Component {
-  render() {
-    return <Avatar size="sm" person={this.props.user} />
-  }
-}
-
-class UserAvatar extends Component {
-  constructor(props) {
-    super(props);
-    this.store = this.props.userState;
-  }
-
-  mapStateToProps(state, ownProps) {
-    return {...state}
-  }
-
-  render() {
-    const VisibleAvatar = connect(this.mapStateToProps)(UserAvatarPresent);
-    return [
-      <Provider key="new" store={this.store}>
-        <VisibleAvatar userState={this.props.userState}/>
-      </Provider>
-    ]
   }
 }
 
@@ -569,6 +549,6 @@ function TooltipToggleButton(props) {
     </span>
 }
 
-export { Avatar, TimeCaption, FieldGroup, RenkuNavLink, UserAvatar, Pagination, RenkuMarkdown };
+export { UserAvatar, TimeCaption, FieldGroup, RenkuNavLink, Pagination, RenkuMarkdown };
 export { ExternalLink, Loader, InfoAlert, SuccessAlert, WarnAlert, ErrorAlert, JupyterIcon };
 export { Clipboard, ExternalIconLink, IconLink, ThrottledTooltip, TooltipToggleButton };
