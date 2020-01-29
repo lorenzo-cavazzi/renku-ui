@@ -31,7 +31,7 @@ import { createMemoryHistory } from 'history';
 import ProjectList from './';
 import ProjectListModel from  './ProjectList.state';
 import { testClient as client } from '../../api-client';
-import { generateFakeUser } from '../../app-state/UserState.test';
+import { generateFakeUser } from '../../user/User.test';
 
 
 const fakeHistory = createMemoryHistory({

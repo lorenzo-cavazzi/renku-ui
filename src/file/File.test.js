@@ -28,7 +28,7 @@ import ReactDOM from 'react-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 import { testClient as client } from '../api-client'
-import { generateFakeUser } from '../app-state/UserState.test';
+import { generateFakeUser } from '../user/User.test';
 import { ShowFile, JupyterButton } from './index';
 import { StateModel, globalSchema } from '../model'
 

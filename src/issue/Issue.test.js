@@ -31,7 +31,7 @@ import Issue from './Issue';
 import State from  './Issue.state';
 import { testClient as client } from '../api-client';
 import { slugFromTitle } from '../utils/HelperFunctions';
-import { generateFakeUser } from '../app-state/UserState.test';
+import { generateFakeUser } from '../user/User.test';
 
 describe('rendering', () => {
   const user = generateFakeUser(true);
