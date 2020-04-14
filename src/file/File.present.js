@@ -16,13 +16,11 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useState } from "react";
 import NotebookPreview from "@nteract/notebook-render";
 
-// Do not import the style because this does not work after webpack bundles things for production mode.
-// Instead define the style below
-//import './notebook.css'
 import { Card, CardHeader, CardBody, Badge } from "reactstrap";
+import { Button, ButtonGroup } from "reactstrap";
 import { ListGroup, ListGroupItem } from "reactstrap";
 import "../../node_modules/highlight.js/styles/atom-one-light.css";
 import { faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
@@ -130,11 +128,7 @@ class ShowFile extends React.Component {
       return (
         <FileCard
           gitLabUrl={this.props.externalUrl}
-          filePath={this.props.gitLabFilePath
-            .split("\\")
-            .pop()
-            .split("/")
-            .pop()}
+          filePath={this.props.gitLabFilePath.split("\\").pop().split("/").pop()}
           commit={this.props.commit}
           buttonGraph={buttonGraph}
           buttonGit={buttonGit}
@@ -179,49 +173,123 @@ class ShowFile extends React.Component {
 }
 
 /**
+ * Modes of showing notebook source code.
+ */
+const NotebookSourceDisplayMode = {
+  DEFAULT: "DEFAULT",
+  SHOWN: "SHOWN",
+  HIDDEN: "HIDDEN",
+};
+/**
+ * Modify the cell metadata according to the hidden policy
+ *
+ * @param {object} [cell] - The cell to process
+ * @param {array} [accum] - The place to store the result
+ */
+function tweakCellMetadataHidden(cell, accum) {
+  const clone = { ...cell };
+  clone.metadata = { ...cell.metadata };
+  clone.metadata.hide_input = true;
+  accum.push(clone);
+}
+
+/**
+ * Modify the cell metadata according to the show policy
+ *
+ * @param {object} [cell] - The cell to process
+ * @param {array} [accum] - The place to store the result
+ */
+function tweakCellMetadataShow(cell, accum) {
+  const clone = { ...cell };
+  clone.metadata = { ...cell.metadata };
+  clone.metadata.hide_input = false;
+  accum.push(clone);
+}
+
+/**
+ * Modify the cell metadata according to the default policy
+ *
+ * @param {object} [cell] - The cell to process
+ * @param {array} [accum] - The place to store the result
+ */
+function tweakCellMetadataDefault(cell, accum) {
+  if (cell.metadata.jupyter == null) {
+    accum.push(cell);
+  }
+  else {
+    const clone = { ...cell };
+    clone.metadata = { ...cell.metadata };
+    clone.metadata.hide_input = clone.metadata.jupyter.source_hidden;
+    accum.push(clone);
+  }
+}
+
+/**
  * Modify the notebook metadata so it is correctly processed by the renderer.
  *
  * @param {object} [nb] - The notebook to process
+ * @param {string} [displayMode] - The mode to use to process the notebook
  */
-function tweakCellMetadata(nb) {
+function tweakCellMetadata(nb, displayMode = NotebookSourceDisplayMode.DEFAULT) {
   // Scan the cell metadata, and, if jupyter.source_hidden === true, set hide_input = true
   const result = { ...nb };
   result.cells = [];
-  nb.cells.forEach(cell => {
-    if (cell.metadata.jupyter == null) {
-      result.cells.push(cell);
-    }
-    else {
-      const clone = { ...cell };
-      clone.metadata = { ...cell.metadata };
-      clone.metadata.hide_input = clone.metadata.jupyter.source_hidden;
-      result.cells.push(clone);
-    }
-  });
+  const cellMetadataFunction =
+    displayMode === NotebookSourceDisplayMode.DEFAULT
+      ? tweakCellMetadataDefault
+      : displayMode === NotebookSourceDisplayMode.HIDDEN ?
+        tweakCellMetadataHidden
+        : tweakCellMetadataShow;
+  nb.cells.forEach((cell) => cellMetadataFunction(cell, result.cells));
+  if (displayMode === NotebookSourceDisplayMode.SHOWN) {
+    // Set the hide_input to false;
+    result["metadata"] = { ...result["metadata"] };
+    result["metadata"]["hide_input"] = false;
+  }
   return result;
 }
 
-class StyledNotebook extends React.Component {
-  componentDidMount() {
-    // TODO go through the dom and modify the nodes, e.g., with D3
-    //this.fixUpDom(ReactDOM.findDOMNode(this.notebook));
-  }
+function StyledNotebook(props) {
+  const [displayMode, setDisplayMode] = useState(NotebookSourceDisplayMode.DEFAULT);
 
-  render() {
-    if (this.props.notebook == null) return <div>Loading...</div>;
-    const notebook = tweakCellMetadata(this.props.notebook);
-    return [
-      <NotebookPreview
-        key="notebook"
-        ref={c => {
-          this.notebook = c;
-        }}
-        defaultStyle={false}
-        loadMathjax={false}
-        notebook={notebook}
-      />
-    ];
-  }
+  if (props.notebook == null) return <div>Loading...</div>;
+
+  const notebook = tweakCellMetadata(props.notebook, displayMode);
+  return [
+    <ListGroup key="controls" flush>
+      <ListGroupItem>
+        <div>
+          <span>
+            <b>Code Visibility &nbsp;</b>
+          </span>
+          <ButtonGroup key="controls" size="sm">
+            <Button
+              color="primary"
+              onClick={() => setDisplayMode(NotebookSourceDisplayMode.DEFAULT)}
+              active={displayMode === NotebookSourceDisplayMode.DEFAULT}
+            >
+              Default
+            </Button>
+            <Button
+              color="primary"
+              onClick={() => setDisplayMode(NotebookSourceDisplayMode.SHOWN)}
+              active={displayMode === NotebookSourceDisplayMode.SHOWN}
+            >
+              Visible
+            </Button>
+            <Button
+              color="primary"
+              onClick={() => setDisplayMode(NotebookSourceDisplayMode.HIDDEN)}
+              active={displayMode === NotebookSourceDisplayMode.HIDDEN}
+            >
+              Hidden
+            </Button>
+          </ButtonGroup>
+        </div>
+      </ListGroupItem>
+    </ListGroup>,
+    <NotebookPreview key="notebook" defaultStyle={false} loadMathjax={false} notebook={notebook} />,
+  ];
 }
 
 class JupyterButtonPresent extends React.Component {
@@ -243,4 +311,4 @@ class JupyterButtonPresent extends React.Component {
   }
 }
 
-export { StyledNotebook, JupyterButtonPresent, ShowFile, tweakCellMetadata };
+export { StyledNotebook, JupyterButtonPresent, ShowFile, tweakCellMetadata, NotebookSourceDisplayMode };
