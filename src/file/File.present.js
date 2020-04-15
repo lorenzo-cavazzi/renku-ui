@@ -90,7 +90,7 @@ class FileCard extends React.Component {
           </div>
         </CardHeader>
         {commitHeader}
-        <CardBody>{this.props.body}</CardBody>
+        {this.props.body}
       </Card>
     );
   }
@@ -288,7 +288,9 @@ function StyledNotebook(props) {
         </div>
       </ListGroupItem>
     </ListGroup>,
-    <NotebookPreview key="notebook" defaultStyle={false} loadMathjax={false} notebook={notebook} />,
+    <CardBody key="notebook">
+      <NotebookPreview defaultStyle={false} loadMathjax={false} notebook={notebook} />,
+    </CardBody>
   ];
 }
 
