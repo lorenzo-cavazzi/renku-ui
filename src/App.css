@@ -211,3 +211,7 @@ body {
   margin-bottom: 0;
   word-break: normal;
 }
+
+.mw-0 {
+  min-width: 0;
+}
