@@ -99,11 +99,12 @@ describe("rendering", () => {
   const loggedUser = generateFakeUser();
   const model = new StateModel(globalSchema);
 
+  // ! Remove from here and leave only in the new test files?
   it("renders new without crashing for logged user", () => {
     const div = document.createElement("div");
     ReactDOM.render(
       <MemoryRouter>
-        <Project.New
+        <Project.NewLegacy
           client={client}
           model={model}
           history={fakeHistory}

@@ -86,6 +86,16 @@ class App extends Component {
                   {...p}
                 />}
               />
+              <Route exact path="/projects/new" render={
+                p => <Project.NewProject
+                  key="newProject"
+                  client={this.props.client}
+                  model={this.props.model}
+                  user={this.props.user}
+                  templates={this.props.params["TEMPLATES"]}
+                  {...p}
+                />}
+              />
               {/* pull out the underlying parts of the url and pass them to the project view */}
               <Route path="/projects/:subUrl+" render={
                 p => <Project.View
@@ -99,8 +109,9 @@ class App extends Component {
                   {...p}
                 />}
               />
+              {/* // ! TODO: REMOVE */}
               <Route exact path="/project_new" render={
-                p => <Project.New
+                p => <Project.NewLegacy
                   key="project_new"
                   client={this.props.client}
                   model={this.props.model}

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 - Swiss Data Science Center (SDSC)
+ * Copyright 2020 - Swiss Data Science Center (SDSC)
  * A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
  * Eidgenössische Technische Hochschule Zürich (ETHZ).
  *
@@ -17,21 +17,27 @@
  */
 
 /**
- *  incubator-renku-ui
+ *  renku-ui
  *
- *  Project.js
- *  Container components for project.
+ *  ProjectNew.container.js
+ *  Container components for new project
  */
 
 import React, { Component } from "react";
 import { connect } from "react-redux";
+
+
+// KEEP ONLY THESE
+import { NewProject as NewProjectPresent } from "./ProjectNew.present";
+import { NewProjectCoordinator } from "./ProjectNew.state";
+import { ProjectsCoordinator } from "../shared";
+
 
 import { StateKind, StateModel } from "../../model/Model";
 // TODO: ONLY use one projectSchema after the refactoring has been finished.
 import { newProjectSchema } from "../../model/RenkuModels";
 import { slugFromTitle } from "../../utils/HelperFunctions";
 import ProjectNew from "./ProjectNew.present";
-import { ProjectsCoordinator } from "../shared";
 
 
 function groupVisibilitySupportsVisibility(groupVisibility, visibility) {
@@ -51,7 +57,82 @@ function projectVisibilitiesForGroupVisibility(groupVisibility = "public") {
   return visibilities;
 }
 
-class New extends Component {
+class NewProject extends Component {
+  constructor(props) {
+    super(props);
+    this.model = props.model;
+    this.coordinator = new NewProjectCoordinator(props.client, this.model.subModel("newProject"));
+    this.coordinator.setConfig(props.templates.custom, props.templates.repositories);
+    this.projectsCoordinator = new ProjectsCoordinator(props.client, props.model.subModel("projects"));
+
+    this.handlers = {
+      getNamespaces: this.getNamespaces.bind(this),
+      setProperty: this.setProperty.bind(this),
+      setNamespace: this.setNamespace.bind(this),
+      setVariables: this.setVariables.bind(this)
+    };
+  }
+
+  async getNamespaces() {
+    return this.projectsCoordinator.getNamespaces();
+  }
+
+  // useful? escape for regex
+  escapeRegexCharacters(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  setProperty(property, value) {
+    this.coordinator.setProperty(property, value);
+  }
+
+  setNamespace(namespace) {
+    this.setProperty("namespace", namespace.path);
+    this.coordinator.getVisibilities(namespace);
+  }
+
+  setVariables(variable, value) {
+    this.coordinator.setVariables(variable, value);
+  }
+
+  mapStateToProps(state, ownProps) {
+    // map minimal projects and user information
+    const additional = {
+      projects: {
+        fetched: state.projects.featured.fetched,
+        fetching: state.projects.featured.fetching,
+        list: state.projects.featured.member
+      },
+      namespaces: {
+        fetched: state.projects.namespaces.fetched,
+        fetching: state.projects.namespaces.fetching,
+        list: state.projects.namespaces.list
+      },
+      user: {
+        logged: state.user.logged
+      }
+    };
+
+    return {
+      ...additional,
+      ...state.newProject,
+      handlers: this.handlers
+    };
+  }
+
+  render() {
+    const ConnectedNewProject = connect(this.mapStateToProps.bind(this))(NewProjectPresent);
+
+    return <ConnectedNewProject
+      store={this.model.reduxStore}
+      //inherited={this.props}
+      //message={this.props.message}
+      //justStarted={this.state.starting}
+    />;
+  }
+}
+
+class NewLegacy extends Component {
   constructor(props) {
     super(props);
 
@@ -157,6 +238,7 @@ class New extends Component {
     if (!validation.result)
       this.setState({ statuses: validation.errors });
 
+    console.log(validation)
     return validation;
   }
 
@@ -265,4 +347,5 @@ class New extends Component {
 }
 
 
-export default New;
+export { NewProject };
+export default NewLegacy;

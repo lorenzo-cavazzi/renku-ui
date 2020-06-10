@@ -50,6 +50,8 @@ spec:
               {{- end }}
             - name: ANONYMOUS_SESSIONS
               value: {{ .Values.global.anonymousSessions.enabled | default (printf "false") | quote }}
+            - name: TEMPLATES
+              value: {{ toJson .Values.templates | quote }}
           livenessProbe:
             httpGet:
               path: /

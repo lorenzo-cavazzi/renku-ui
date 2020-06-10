@@ -23,7 +23,7 @@
  *
  */
 
-import { Schema } from "./Model";
+import { Schema, PropertyName as Prop } from "./Model";
 import FormGenerator from "../utils/formgenerator/";
 
 const userSchema = new Schema({
@@ -35,11 +35,18 @@ const userSchema = new Schema({
 
 const projectsSchema = new Schema({
   featured: {
-    schema: new Schema({
-      fetched: { initial: null, mandatory: true },
-      fetching: { initial: false, mandatory: true },
-      starred: { initial: [], mandatory: true },
-      member: { initial: [], mandatory: true },
+    [Prop.SCHEMA]: new Schema({
+      fetched: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      fetching: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      starred: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true },
+      member: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true }
+    })
+  },
+  namespaces: {
+    [Prop.SCHEMA]: new Schema({
+      fetched: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      fetching: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      list: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true }
     })
   }
 });
@@ -170,6 +177,64 @@ const projectSchema = new Schema({
       progress: { initial: null }
     }
   }
+});
+
+const newProjectGlobalSchema = new Schema({
+  config: {
+    [Prop.SCHEMA]: new Schema({
+      custom: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      repositories: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true } // contains only { url, ref, name }
+    })
+  },
+  templates: {
+    [Prop.SCHEMA]: new Schema({
+      fetched: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      fetching: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      errors: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true }, // contains only { "name": "desc" }
+      all: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true } // this contains only templateSchema[]
+    })
+  },
+  userTemplate: {
+    [Prop.SCHEMA]: new Schema({
+      fetched: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      fetching: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      error: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true }, // contains "desc"
+      all: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true } // this contains only templateSchema[]
+    })
+  },
+  input: {
+    [Prop.SCHEMA]: new Schema({
+      title: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      namespace: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      visibility: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      userRepo: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+      knowledgeGraph: { [Prop.INITIAL]: true, [Prop.MANDATORY]: true },
+      template: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+      variables: { [Prop.INITIAL]: {}, [Prop.MANDATORY]: true }, // contains pairs "var1": "value1"
+    })
+  },
+  meta: {
+    [Prop.SCHEMA]: new Schema({
+      namespace: {
+        [Prop.SCHEMA]: new Schema({
+          id: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+          fetched: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+          fetching: { [Prop.INITIAL]: false, [Prop.MANDATORY]: true },
+          visibility: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+          visibilities: { [Prop.INITIAL]: [], [Prop.MANDATORY]: true }
+        })
+      }
+    })
+  }
+});
+
+const templateSchema = new Schema({
+  id: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+  parentRepo: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+  parentTemplate: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+  name: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+  description: { [Prop.INITIAL]: null, [Prop.MANDATORY]: true },
+  variables: { [Prop.INITIAL]: {}, [Prop.MANDATORY]: true }, // contains pairs "var1": "desc1"
 });
 
 const projectGlobalSchema = new Schema({
@@ -387,5 +452,5 @@ const addDatasetToProjectSchema = new Schema({
 export {
   userSchema, metaSchema, displaySchema, newProjectSchema, projectSchema, forkProjectSchema, notebooksSchema,
   projectsSchema, datasetFormSchema, issueFormSchema, datasetImportFormSchema, projectGlobalSchema,
-  addDatasetToProjectSchema
+  addDatasetToProjectSchema, newProjectGlobalSchema, templateSchema
 };

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019 - Swiss Data Science Center (SDSC)
+ * Copyright 2020 - Swiss Data Science Center (SDSC)
  * A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
  * Eidgenössische Technische Hochschule Zürich (ETHZ).
  *
@@ -19,21 +19,8 @@
 /**
  *  renku-ui
  *
- *  model/GlobalSchema.js
- *  Schema for all Components.
+ *  ProjectNew.test.js
+ *  New project test code.
  */
 
-import { Schema, PropertyName as Prop } from "./index";
-import {
-  notebooksSchema, userSchema, projectsSchema, projectGlobalSchema, newProjectGlobalSchema
-} from "./RenkuModels";
-
-const globalSchema = new Schema({
-  notebooks: { [Prop.SCHEMA]: notebooksSchema },
-  user: { [Prop.SCHEMA]: userSchema },
-  projects: { [Prop.SCHEMA]: projectsSchema },
-  project: { [Prop.SCHEMA]: projectGlobalSchema },
-  newProject: { [Prop.SCHEMA]: newProjectGlobalSchema }
-});
-
-export { globalSchema };
+// ! TODO

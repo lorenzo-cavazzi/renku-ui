@@ -26,6 +26,7 @@ echo " RENKU_TEMPLATES_URL=${RENKU_TEMPLATES_URL}"
 echo " RENKU_TEMPLATES_REF=${RENKU_TEMPLATES_REF}"
 echo " MAINTENANCE=${MAINTENANCE}"
 echo " ANONYMOUS_SESSIONS=${ANONYMOUS_SESSIONS}"
+echo " TEMPLATES=${TEMPLATES}"
 echo "==================================================="
 
 tee > /usr/share/nginx/html/config.json << EOF
@@ -38,7 +39,8 @@ tee > /usr/share/nginx/html/config.json << EOF
   "RENKU_TEMPLATES_URL": "${RENKU_TEMPLATES_URL}",
   "RENKU_TEMPLATES_REF": "${RENKU_TEMPLATES_REF}",
   "MAINTENANCE": "${MAINTENANCE}",
-  "ANONYMOUS_SESSIONS": "${ANONYMOUS_SESSIONS}"
+  "ANONYMOUS_SESSIONS": "${ANONYMOUS_SESSIONS}",
+  "TEMPLATES": ${TEMPLATES}
 }
 EOF
 

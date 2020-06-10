@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 - Swiss Data Science Center (SDSC)
+ * Copyright 2020 - Swiss Data Science Center (SDSC)
  * A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
  * Eidgenössische Technische Hochschule Zürich (ETHZ).
  *
@@ -20,25 +20,248 @@
  *  renku-ui
  *
  *  ProjectNew.present.js
- *  Presentational components.
+ *  New project presentational components.
  */
 
 
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 
 import Autosuggest from "react-autosuggest";
 
-import { Row, Col } from "reactstrap";
-import { Button, FormGroup, FormText, Label } from "reactstrap";
+import { Row, Col, Tooltip, UncontrolledTooltip } from "reactstrap";
+import { Form, Button, FormGroup, FormText, Label } from "reactstrap";
 import { Input, InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
 import { Alert } from "reactstrap";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faInfoCircle, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle, faExternalLinkAlt, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 
 import collection from "lodash/collection";
 import { FieldGroup, Loader } from "../../utils/UIComponents";
 import "./Project.style.css";
+
+
+/**
+ * Generate refresh button
+ *
+ * @param {function} refresh - function to invoke
+ * @param {string} tip - message to display in the tooltip
+ * @param {boolean} disabled - whether it's disabled or not
+ */
+function makeRefreshButton(refresh, tip, disabled) {
+  const id = refresh.name.replace(" ", "");
+  return (
+    <Fragment>
+      <Button key="button" className="ml-2 p-0" color="link" size="sm"
+        id={id} onClick={() => refresh()} disabled={disabled} >
+        <FontAwesomeIcon icon={faSyncAlt} />
+      </Button>
+      <UncontrolledTooltip key="tooltip" placement="top" target={id}>{tip}</UncontrolledTooltip>
+    </Fragment>
+  );
+}
+
+
+class NewProject extends Component {
+  render() {
+    const { handlers } = this.props;
+
+    return (
+      <Row>
+        <Col sm={10} md={9} lg={8} xl={7}>
+          <h1>New project</h1>
+          <Form>
+            <FormGroup>
+              <Label>Title</Label>
+              <Input type="text" name="title" id="title" placeholder="Project title..."
+                onChange={(e) => handlers.setProperty("title", e.target.value)} />
+            </FormGroup>
+            <NewProjectNamespaces {...this.props} />
+            <NewProjectVisibility {...this.props} />
+          </Form>
+
+          {/* <Button onClick={() => handlers.getNamespaces()}>Get Namespaces</Button> */}
+        </Col>
+      </Row>
+    );
+  }
+}
+
+
+class NewProjectNamespaces extends Component {
+  componentDidMount() {
+    // fetch namespaces if not available yet
+    const { namespaces, handlers } = this.props;
+    if (!namespaces.fetched && !namespaces.fetching)
+      handlers.getNamespaces();
+  }
+
+  render() {
+    const { namespaces, handlers } = this.props;
+    const refreshButton = makeRefreshButton(handlers.getNamespaces, "Refresh namespaces", namespaces.fetching);
+    const main = namespaces.fetching ?
+      (<Label className="font-italic"><br />Refreshing... <Loader inline={true} size={16} /></Label>) :
+      (<NewProjectNamespacesAutosuggest {...this.props} />);
+
+    return (
+      <FormGroup>
+        <Label>Namespace {refreshButton}</Label>
+        {main}
+      </FormGroup>
+    );
+  }
+}
+
+
+class NewProjectNamespacesAutosuggest extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: "",
+      suggestions: []
+    };
+  }
+
+  // [OLD]
+  // getSuggestions(value) {
+  //   const { namespaces } = this.props;
+  //   console.log(namespaces.list)
+
+  //   const inputValue = value.trim().toLowerCase();
+  //   return inputValue.length === 0 ?
+  //     namespaces.list :
+  //     namespaces.list.filter(namespace => namespace.path.toLowerCase().indexOf(inputValue) >= 0);
+  // }
+  getSuggestions(value) {
+    const { namespaces } = this.props;
+    const inputValue = value.trim().toLowerCase();
+
+    // filter namespaces
+    const filtered = inputValue.length === 0 ?
+      namespaces.list :
+      namespaces.list.filter(namespace => namespace.path.toLowerCase().indexOf(inputValue) >= 0);
+    if (!filtered.length)
+      return [];
+
+    // separate different namespaces kind
+    const suggestionsObject = filtered.reduce(
+      (suggestions, namespace) => {
+        namespace.kind === "group" ? suggestions.group.push(namespace) : suggestions.user.push(namespace);
+        return suggestions;
+      },
+      { user: [], group: [] }
+    );
+
+    // filter 0 length groups
+    return Object.keys(suggestionsObject).reduce(
+      (suggestions, kind) => suggestionsObject[kind].length ?
+        [...suggestions, { kind, namespaces: suggestionsObject[kind] }] :
+        suggestions,
+      []
+    );
+  }
+
+  getSuggestionValue(suggestion) {
+    return suggestion.path;
+  }
+
+  getSectionSuggestions(suggestion) {
+    return suggestion.namespaces;
+  }
+
+  renderSuggestion(suggestion) {
+    return (<span>{suggestion.path}</span>);
+  }
+
+  renderSectionTitle(suggestion) {
+    return (<strong>{suggestion.kind}</strong>);
+  }
+
+  onBlur = (event, { newValue }) => {
+    if (newValue)
+      this.props.handlers.setNamespace(newValue);
+    else if (this.props.input.namespace)
+      this.setState({ value: this.props.input.namespace });
+  }
+
+  onChange = (event, { newValue, method }) => {
+    this.setState({ value: newValue });
+    if (method === "enter" || method === "click") {
+      const namespace = this.props.namespaces.list.filter(ns => ns.path === newValue)[0];
+      this.props.handlers.setNamespace(namespace);
+    }
+    // ! CHECK - this.props.onAccept();
+  };
+
+  onSuggestionsFetchRequested = ({ value, reason }) => {
+    // show all namespaces on mouse click
+    if (reason === "input-focused")
+      value = "";
+    this.setState({ suggestions: this.getSuggestions(value) });
+  };
+
+  onSuggestionsClearRequested = () => {
+    this.setState({ suggestions: [] });
+  };
+
+  getTheme() {
+    const defaultTheme = {
+      container: "react-autosuggest__container",
+      containerOpen: "react-autosuggest__container--open",
+      input: "react-autosuggest__input",
+      inputOpen: "react-autosuggest__input--open",
+      inputFocused: "react-autosuggest__input--focused",
+      suggestionsContainer: "react-autosuggest__suggestions-container",
+      suggestionsContainerOpen: "react-autosuggest__suggestions-container--open",
+      suggestionsList: "react-autosuggest__suggestions-list",
+      suggestion: "react-autosuggest__suggestion",
+      suggestionFirst: "react-autosuggest__suggestion--first",
+      suggestionHighlighted: "react-autosuggest__suggestion--highlighted",
+      sectionContainer: "react-autosuggest__section-container",
+      sectionContainerFirst: "react-autosuggest__section-container--first",
+      sectionTitle: "react-autosuggest__section-title"
+    };
+    // Override the input theme to match our visual style
+    return { ...defaultTheme, ...{ input: "form-control" } };
+  }
+
+  render() {
+    const { value, suggestions } = this.state;
+    const theme = this.getTheme();
+
+    const inputProps = {
+      placeholder: "Select a namespace...",
+      value,
+      onChange: this.onChange,
+      onBlur: this.onBlur
+    };
+
+    return (
+      <Autosuggest
+        multiSection={true}
+        suggestions={suggestions}
+        onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+        onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+        getSuggestionValue={this.getSuggestionValue}
+        getSectionSuggestions={this.getSectionSuggestions}
+        renderSuggestion={this.renderSuggestion}
+        renderSectionTitle={this.renderSectionTitle}
+        shouldRenderSuggestions={(v) => true}
+        inputProps={inputProps}
+        theme={theme}
+      />
+    );
+  }
+}
+
+
+class NewProjectVisibility extends Component {
+  render() {
+    return (
+      <span>ahha</span>
+    );
+  }
+}
 
 
 class ProjectPath extends Component {
@@ -77,6 +300,7 @@ class ProjectPath extends Component {
   }
 
   getSectionSuggestions(section) {
+    console.log(section)
     return section.namespaces;
   }
 
@@ -123,6 +347,7 @@ class ProjectPath extends Component {
       suggestions.splice(0, 0, current);
     }
     this.setState({ suggestions });
+    console.log(suggestions)
   }
 
   doSuggestionsClearRequested() {
@@ -341,4 +566,6 @@ class SubmitErrors extends Component {
 
 }
 
+
+export { NewProject };
 export default ProjectNew;
