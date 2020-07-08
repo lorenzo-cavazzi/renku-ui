@@ -65,7 +65,8 @@ class NewProject extends Component {
   }
 
   setProperty(property, value) {
-    this.coordinator.setProperty(property, value);
+    // projects data are provided for full validation
+    this.coordinator.setProperty(property, value, this.model.get("projects"));
   }
 
   setNamespace(namespace) {
@@ -85,10 +86,12 @@ class NewProject extends Component {
   onSubmit(e) {
     // validate
     e.preventDefault();
-    const validation = this.coordinator.validate();
-    if (validation.client.errors && validation.client.errors.length)
-      // TODO: display error strings/data
-      return;
+
+    // ! No need to perform a static validation anymore since it's executed realtime
+    // const validation = this.coordinator.validate();
+    // if (validation.client.errors && validation.client.errors.length)
+    //   // TODO: display error strings/data
+    //   return;
 
     // submit
     const gitlabUrl = gitLabUrlFromProfileUrl(this.props.user.data.web_url);
@@ -105,12 +108,17 @@ class NewProject extends Component {
   }
 
   mapStateToProps(state, ownProps) {
-    // map minimal projects and user information
+    // const fullpaths = state.projects.featured.member && state.projects.featured.member.length?
+    //   state.projects.featured.member.map(project => project.path_with_namespace.toLowerCase()) :
+    //   null;
+
+    // map minimal necessary data
     const additional = {
       projects: {
         fetched: state.projects.featured.fetched,
         fetching: state.projects.featured.fetching,
         list: state.projects.featured.member
+        //fullpaths
       },
       namespaces: {
         fetched: state.projects.namespaces.fetched,

@@ -111,7 +111,8 @@ class NewProject extends Component {
 class Title extends Component {
   render() {
     const { handlers } = this.props;
-    const validationDict = this.props.meta.validation.client.errorDict;
+    // ! verify if error and if !input.titlePristine
+    const error = "test"; //OLD :this.props.meta.validation.client.errorDict;
     const url = "https://docs.gitlab.com/ce/user/reserved_names.html#reserved-project-names";
 
     const help = (
@@ -124,7 +125,8 @@ class Title extends Component {
     return (
       <FieldGroup id="title" type="text" label="Title"
         placeholder="A brief name to identify the project" help={help}
-        feedback={validationDict.title} invalid={validationDict.title != null}
+        feedback={error}
+        //invalid={error}
         onChange={(e) => handlers.setProperty("title", e.target.value)} />
     );
   }
@@ -500,8 +502,9 @@ class Template extends Component {
 
   render() {
     const { handlers, input, templates } = this.props;
-    const validationDict = this.props.meta.validation.client.errorDict;
-    const feedback = validationDict.template, invalid = validationDict.template != null;
+    // ! Implement correct error handling
+    //const validationDict = this.props.meta.validation.client.errorDict;
+    //const feedback = validationDict.template, invalid = validationDict.template != null;
     let main, help = null;
     if (templates.fetching) {
       main = (
@@ -517,7 +520,10 @@ class Template extends Component {
       );
       main = (
         <Input type="select" placeholder="Select template..."
-          value={input.template} invalid={invalid}
+          value={input.template}
+          // ! double check this "invalid"
+          //invalid={invalid}
+          invalid={false}
           onChange={(e) => handlers.setProperty("template", e.target.value)} >
           <option key="" value="" disabled>Select a template...</option>
           {options}
@@ -526,13 +532,14 @@ class Template extends Component {
       if (input.template)
         help = capitalize(templates.all.filter(t => t.id === input.template)[0].description);
     }
-    const subProps = { invalid };
+    //const subProps = { invalid };
 
     return (
       <FormGroup>
         <Label>Template</Label>
         {main}
-        {feedback && <FormFeedback {...subProps}>{feedback}</FormFeedback>}
+        {/* // ! Implement correct feedback
+        {feedback && <FormFeedback {...subProps}>{feedback}</FormFeedback>} */}
         {help && <FormText color="muted">{help}</FormText>}
       </FormGroup>
     );
@@ -563,6 +570,57 @@ class Variables extends Component {
     return variables;
   }
 }
+
+
+// /**
+//  * Validate current input
+//  * @param {Object} creation - newProject.meta.creation object
+//  */
+// const validate = (props) => {
+//   const { templates, namespaces, input, projects, meta } = props;
+//   // ? reference https://docs.gitlab.com/ce/user/reserved_names.html#reserved-project-names
+//   const reserverdNames = ["badges", "blame", "blob", "builds", "commits", "create", "create_dir",
+//     "edit", "environments/folders", "files", "find_file", "gitlab-lfs/objects", "info/lfs/objects",
+//     "new", "preview", "raw", "refs", "tree", "update", "wikis"];
+//   let errors = {}, warnings = {};
+
+//   // check warnings: temporary problems
+//   if (namespaces.fetching)
+//     warnings["namespace"] = "Fetching namespaces";
+//   if (meta.namespace.fetching)
+//     warnings["visibility"] = "Verifying visibility constraints";
+//   if (templates.fetching)
+//     warnings["template"] = "Fetching templates";
+
+//   // check errors: require user intervention. Skip if there is a warning
+//   if (!input.title)
+//     errors["title"] = "Missing title";
+//   else if (reserverdNames.includes(input.title))
+//     errors["title"] = "Reserverd title name";
+//   else if (projects.fullpaths.includes(`${input.namespace}/${slugFromTitle(input.title, true)}`))
+//     errors["title"] = "Title already in current namespace";
+
+//   if (!warnings["namespace"] && !input.namespace)
+//     errors["namespace"] = "Select a namespace";
+
+//   if (!warnings["visibility"] && !input.visibility)
+//     errors["visibility"] = "Select visibility";
+
+//   // ! TODO: verify if validation here is correct
+//   // const error = templates.errors && templates.errors.length ?
+//   //   templates.errors[0] :
+//   //   null;
+//   // if (error) {
+//   //   let text;
+//   //   for (let key of Object.keys(error))
+//   //     text = error[key];
+//   //   alert = (<Alert color="danger">{text}</Alert>);
+//   // }
+//   if (!warnings["template"] && templates.errors && templates.errors.length)
+//     errors["template"] = "TODO";
+//   else if (!warnings["template"] && !input.template)
+//     errors["template"] = "Select a template";
+// }
 
 class Create extends Component {
   constructor(props) {

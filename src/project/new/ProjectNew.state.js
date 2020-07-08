@@ -24,23 +24,16 @@
  */
 
 import { newProjectSchema } from "../../model/RenkuModels";
+import { slugFromTitle } from "../../utils/HelperFunctions";
 
 class NewProjectCoordinator {
-  constructor(client, model) {
+  constructor(client, model, globalModel) {
     this.client = client;
     this.model = model;
+    this.globalModel = globalModel;
   }
 
-  _setVisibility(value) {
-    this.model.setObject({
-      input: {
-        visibility: value,
-        knowledgeGraph: true
-      }
-    });
-  }
-
-  _setTemplate(currentInput, value) {
+  _setTemplateVariables(currentInput, value) {
     const templates = currentInput.userRepo ?
       this.model.get("meta.userTemplates") :
       this.model.get("templates");
@@ -60,13 +53,14 @@ class NewProjectCoordinator {
         "";
       return { ...values, [variable]: text };
     }, {});
-    this.model.setObject({
-      input: {
-        template: value,
-        variables: { $set: values }
-      },
-      meta: { validation: { client: { errorDict: { template: null } } } }
-    });
+    return values;
+    // this.model.setObject({
+    //   input: {
+    //     //template: value,
+    //     variables: { $set: values }
+    //   }
+    //   //meta: { validation: { client: { errorDict: { template: null } } } }
+    // });
   }
 
   resetInput() {
@@ -74,23 +68,25 @@ class NewProjectCoordinator {
     this.model.setObject({ input: pristineInput });
   }
 
-  setProperty(property, value) {
+  setProperty(property, value, projects = null) {
     const currentInput = this.model.get("input");
-    if (currentInput[property] === value) return;
+
+    // check if the value needs to be updated
+    if (currentInput[property] === value)
+      return;
+    let updateObj = { input: { [property]: value } };
 
     // reset knowledgeGraph when needed
     if (property === "visibility")
-      return this._setVisibility(value);
+      updateObj.input.knowledgeGraph = true;
 
     // pre-set variables and reset when needed
     if (property === "template")
-      return this._setTemplate(currentInput, value);
+      updateObj.input.variables = { $set: this._setTemplateVariables(currentInput, value) };
 
-    // Set the property and clear any errors for this prop
-    const updateObj = {
-      input: { [property]: value },
-      meta: { validation: { client: { errorDict: { [property]: null } } } }
-    };
+    // validate current state and update model
+    updateObj["meta"] = { validation: this.validate(projects, updateObj.input) };
+    console.log(updateObj);
     this.model.setObject(updateObj);
   }
 
@@ -241,15 +237,21 @@ class NewProjectCoordinator {
     updateObject.meta.namespace.fetching = false;
     updateObject.meta.namespace.id = namespace.full_path;
 
-    // verify current visibility and knowledgeGraph and adjust it if needed
-    const currentInput = this.model.get("input");
-    if (!visibilities.includes(currentInput.visibility))
-      // pick the most generous visibility
-      updateObject.input = { visibility: visibilities[visibilities.length - 1] };
-
-    // save model and return values
+    // save the model and invoke the normal setProperty
     this.model.setObject(updateObject);
+    this.setProperty("visibility", visibilities[visibilities.length - 1]);
     return visibilities;
+
+    // OLD
+    // // verify current visibility and knowledgeGraph and adjust it if needed
+    // const currentInput = this.model.get("input");
+    // if (!visibilities.includes(currentInput.visibility))
+    //   // pick the most generous visibility
+    //   updateObject.input = { visibility: visibilities[visibilities.length - 1] };
+
+    // // save model and return values
+    // this.model.setObject(updateObject);
+    // return visibilities;
   }
 
   /**
@@ -358,16 +360,83 @@ class NewProjectCoordinator {
   }
 
   /**
-   * Clear any previous errors and perform client-side validation.
+   * Perform client-side validation. An optional input object can be passed with updated values.
+   * That will be assigned to the current input and return the validation data instead of applying them.
+   * It enables to perform an atomic setObject operation.
+   *
+   * @param {Object} [projects] - required to perform a full validation
+   * @param {Object} [newInput] - input object containing only the updated fields.
    */
-  validate() {
-    const client = newProjectSchema.validate(this.model.get());
-    const errorDict = {};
-    client.errors.forEach((d) => { Object.keys(d).forEach(k => errorDict[k] = d[k]); });
-    client["errorDict"] = errorDict;
-    const server = [];
-    this.model.set("meta.validation", { client, server });
-    return { client, server };
+  validate(projects, newInput) {
+    // const client = newProjectSchema.validate(this.model.get());
+    // const errorDict = {};
+    // client.errors.forEach((d) => { Object.keys(d).forEach(k => errorDict[k] = d[k]); });
+    // client["errorDict"] = errorDict;
+    // const server = [];
+    // this.model.set("meta.validation", { client, server });
+    // return { client, server };
+
+    // get all the necessary data
+    let model = this.model.get();
+    let { templates, input, meta } = model;
+    const projectsPaths = projects && projects.featured.member && projects.featured.member.length ?
+      projects.featured.member.map(project => project.path_with_namespace.toLowerCase()) :
+      [];
+
+    if (newInput)
+      input = Object.assign({}, input, newInput);
+
+    // ? reference https://docs.gitlab.com/ce/user/reserved_names.html#reserved-project-names
+    const reserverdNames = ["badges", "blame", "blob", "builds", "commits", "create", "create_dir",
+      "edit", "environments/folders", "files", "find_file", "gitlab-lfs/objects", "info/lfs/objects",
+      "new", "preview", "raw", "refs", "tree", "update", "wikis"];
+    let errors = {}, warnings = {};
+
+    // check warnings: temporary problems
+    if (projects && projects.namespaces.fetching)
+      warnings["namespace"] = "Fetching namespaces";
+    if (meta.namespace.fetching)
+      warnings["visibility"] = "Verifying visibility constraints";
+    if (templates.fetching)
+      warnings["template"] = "Fetching templates";
+
+    // check errors: require user intervention. Skip if there is a warning
+    if (!input.title)
+      errors["title"] = "Missing title";
+    else if (reserverdNames.includes(input.title))
+      errors["title"] = "Reserverd title name";
+    else if (projects && projectsPaths.includes(`${input.namespace}/${slugFromTitle(input.title, true)}`))
+      errors["title"] = "Title already in current namespace";
+
+    if (!warnings["namespace"] && !input.namespace)
+      errors["namespace"] = "Select a namespace";
+
+    if (!warnings["visibility"] && !input.visibility)
+      errors["visibility"] = "Select visibility";
+
+    // ! TODO: verify if validation here is correct
+    // const error = templates.errors && templates.errors.length ?
+    //   templates.errors[0] :
+    //   null;
+    // if (error) {
+    //   let text;
+    //   for (let key of Object.keys(error))
+    //     text = error[key];
+    //   alert = (<Alert color="danger">{text}</Alert>);
+    // }
+    if (!warnings["template"] && templates.errors && templates.errors.length)
+      errors["template"] = "TODO";
+    else if (!warnings["template"] && !input.template)
+      errors["template"] = "Select a template";
+
+    // create validation object and update model directly or return it;
+    const validation = {
+      warnings: { $set: warnings },
+      errors: { $set: errors },
+    };
+    if (!newInput)
+      this.model.setObject({ meta: validation });
+    return validation;
   }
 }
 
