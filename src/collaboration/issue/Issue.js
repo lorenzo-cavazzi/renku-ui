@@ -181,8 +181,9 @@ class View extends Component {
     this.state = { contributions: [] };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this._mounted = true;
+    //console.log(this.props.externalUrl, this.props.user.logged)
     this.retrieveContributions();
   }
 
@@ -209,18 +210,45 @@ class View extends Component {
     });
   }
 
-  retrieveContributions() {
-    this.props.client.getContributions(this.props.projectId, this.props.issueIid)
-      .then(resp => {
-        if (!this._mounted) return;
-        this.setState((prevState, props) => {
-          return { contributions: resp.data };
-        });
-      }).catch(error => {
-        this.setState((prevState, props) => {
-          return { contributions: [] };
-        });
+  async retrieveContributions() {
+    const { client, projectId, issueIid, user, projectPathWithNamespace } = this.props;
+    let contributions;
+    try {
+      if (user.logged) {
+        const resp = await client.getContributions(projectId, issueIid);
+        contributions = resp.data;
+      }
+      else {
+        const resp = await client.getContributionsAnonymous(projectPathWithNamespace, issueIid);
+        contributions = resp.data.notes;
+        //contributions = null;
+        //console.log(resp)
+      }
+
+      if (!this._mounted)
+        return;
+      //this.setState({ contributions });
+      this.setState((prevState, props) => {
+        return { contributions: contributions };
       });
+    }
+    catch (e) {
+      this.setState((prevState, props) => {
+        return { contributions: [] };
+      });
+    }
+
+    // this.props.client.getContributions(this.props.projectId, this.props.issueIid)
+    //   .then(resp => {
+    //     if (!this._mounted) return;
+    //     this.setState((prevState, props) => {
+    //       return { contributions: resp.data };
+    //     });
+    //   }).catch(error => {
+    //     this.setState((prevState, props) => {
+    //       return { contributions: [] };
+    //     });
+    //   });
   }
 
 

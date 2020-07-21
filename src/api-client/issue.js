@@ -54,7 +54,7 @@ function addIssueMethods(client) {
   };
 
 
-  client.getContributions = (projectId, issueIid) => {
+  client.getContributions = async (projectId, issueIid) => {
     let headers = client.getBasicHeaders();
     headers.append("Content-Type", "application/json");
 
@@ -63,6 +63,23 @@ function addIssueMethods(client) {
       headers: headers
     });
 
+  };
+
+  client.getContributionsAnonymous = async (projectSlug, issueIid) => {
+    let headers = client.getBasicHeaders();
+    //headers.append("Content-Type", "application/json");
+    console.log(headers)
+
+    return client.clientFetch(`${client.baseUrl}/direct/${projectSlug}/-/issues/${issueIid}/discussions`, {
+      method: "GET",
+      headers: headers
+    });
+    // .then(resp => {
+    //   //if (resp.projectId)
+    //   console.log(resp)
+
+    //   return resp.notes;
+    // });
   };
 
 
