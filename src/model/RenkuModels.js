@@ -475,7 +475,7 @@ const notificationsSchema = new Schema({
   toast: {
     [Prop.SCHEMA]: new Schema({
       enabled: { [Prop.INITIAL]: true, [Prop.MANDATORY]: true },
-      timeout: { [Prop.INITIAL]: 5000, [Prop.MANDATORY]: true },
+      timeout: { [Prop.INITIAL]: 2000, [Prop.MANDATORY]: true },
       position: { [Prop.INITIAL]: "top-right", [Prop.MANDATORY]: true },
     })
   }

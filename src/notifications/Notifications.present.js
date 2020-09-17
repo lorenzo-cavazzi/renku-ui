@@ -63,37 +63,99 @@ class CloseToast extends Component {
 }
 
 
-class Notification extends Component {
+class NotificationDropdownItem extends Component {
   render() {
-    const { notification, settings } = this.props;
-    if (!settings.enabled)
-      return null;
+    const { notification, markRead, closeToast } = this.props;
+    const { level, topic, desc, link, linkText } = notification;
 
-    let link = null;
-    if (notification.link) {
-      const target = notification.link.startsWith("http") ?
-        (<ExternalLink url={notification.link} title={notification.linkText} role="link" showLinkIcon={true}
-          onClick={() => this.props.markRead()} />) :
-        (<Link onClick={() => this.props.markRead()} to={notification.link}>
-          <FontAwesomeIcon icon={faLink} /> {notification.linkText}
-        </Link>);
-      link = (<p className="mb-1">{target}</p>);
-    }
-
-    const icon = notification.level === NotificationsInfo.Levels.SUCCESS ?
-      (<FontAwesomeIcon icon={faInfoCircle} />) :
-      (<FontAwesomeIcon icon={faExclamationTriangle} />);
+    const icon = (<NotificationIcon level={level} />);
+    const linkObj = (
+      <NotificationLink link={link} linkText={linkText} markRead={markRead} closeToast={closeToast} icon={true} />
+    );
 
     return (
       <div className="small">
         {this.props.renderCloseButton ? this.props.renderCloseButton : null}
         <div>
-          <h6>{icon} {notification.topic}</h6>
+          <h6>{icon} {topic}</h6>
         </div>
-        <p className="mb-1">{notification.desc}</p>
-        {link}
+        <p className="mb-1">{desc}</p>
+        {linkObj}
       </div>
     );
+  }
+}
+
+class NotificationToast extends Component {
+  render() {
+    const { notification, markRead, closeToast } = this.props;
+    const { level, topic, desc, link, linkText } = notification;
+
+    const icon = (<NotificationIcon level={level} />);
+    const linkObj = (
+      <NotificationLink link={link} linkText={linkText} markRead={markRead} closeToast={closeToast} icon={true} />
+    );
+
+    return (
+      <div className="small">
+        <div>
+          <h6>{icon} {topic}</h6>
+        </div>
+        <p className="mb-1">{desc}</p>
+        {linkObj}
+      </div>
+    );
+  }
+}
+
+/**
+ * Notification icon associated to the specific notification level
+ *
+ * @param {string} level - notification level
+ */
+class NotificationIcon extends Component {
+  render() {
+    const { level } = this.props;
+    const { Levels } = NotificationsInfo;
+    return (level === Levels.SUCCESS || level === Levels.INFO) ?
+      (<FontAwesomeIcon icon={faInfoCircle} />) :
+      (<FontAwesomeIcon icon={faExclamationTriangle} />);
+  }
+}
+
+/**
+ * Notification icon associated to the specific notification level
+ *
+ * @param {string} link - target url
+ * @param {string} [linkText] - text to display as link, default is the full url
+ * @param {function} [markRead] - function to mark the notification read
+ * @param {function} [closeToast] - function to close the toast notification
+ * @param {boolean} [icon] - toggle link icon, default false
+ */
+class NotificationLink extends Component {
+  cleanup() {
+    const { markRead, closeToast } = this.props;
+    if (markRead)
+      markRead();
+    if (closeToast)
+      closeToast();
+  }
+
+  render() {
+    const { link, linkText, icon } = this.props;
+
+    if (!link) {
+      return null;
+    }
+    else if (link.startsWith("http")) {
+      return (
+        <ExternalLink url={link} title={linkText} role="link" showLinkIcon={icon} onClick={() => this.cleanup()} />
+      );
+    }
+    const linkIcon = icon ?
+      (<FontAwesomeIcon icon={faLink} />) :
+      null;
+    return (<Link onClick={() => this.cleanup()} to={link}>{linkIcon} {linkText}</Link>);
   }
 }
 
@@ -134,7 +196,8 @@ class NotificationsMenuList extends Component {
       );
       return (
         <div key={notification.id} className={className}>
-          <Notification settings={settings} notification={notification}
+          {/* // ! FROM HERE -- implement specific dropdown notification */}
+          <NotificationDropdownItem settings={settings} notification={notification}
             renderCloseButton={closeButton} markRead={() => markRead()} />
         </div>
       );
@@ -167,4 +230,4 @@ class NotificationsMenuTesting extends Component {
 }
 
 
-export { NotificationsMenu, Notification, CloseToast };
+export { NotificationsMenu, NotificationToast, NotificationDropdownItem, CloseToast };

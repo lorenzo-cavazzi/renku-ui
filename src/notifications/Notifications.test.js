@@ -87,6 +87,7 @@ describe("setup and use notification system", () => {
       "Warning test with external link",
       "https://getbootstrap.com",
       "External link",
+      [],
       "Long description here");
     expect(model.get("notifications.all")).toHaveLength(1);
     const firstNotification = model.get("notifications.all")[0];
