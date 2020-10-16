@@ -139,39 +139,46 @@ class MergeRequestSuggestions extends Component {
 }
 
 /**
- * If appropriate, show a warning banner that the project has not been integration with the knowledge graph.
+ * Knowledge Graph integration banner.
+ *
+ * @param {Object} webhook - project.webhook store object
+ * @param {Object} visibility - project visibility data
+ * @param {function} createGraphWebhook - function to trigger webhook creation
  */
-// ! TODO HERE
-class KnowledgeGraphIntegrationWarningBanner extends Component {
+class KnowledgeGraphIntegration extends Component {
   render() {
-    //console.log(this.props.webhook)
-    if (this.props.webhook.stop) return null;
+    const { webhook, visibility, createGraphWebhook } = this.props;
+    if (webhook.stop)
+      return null;
 
-    const status = this.props.webhook.status;
-    if (status === false) {
-      const isPrivate = this.props.visibility && this.props.visibility.level === "private" ? true : false;
-      return (
-        <KnowledgeGraphWarning
-          close={this.props.onCloseGraphWebhook}
-          webhook={this.props.webhook.created}
-          create={this.props.createGraphWebhook}
-          isPrivate={isPrivate} />
-      );
-    }
-    const error = webhookError(status);
-    if (error) {
-      return (
-        <WarnAlert dismissCallback={this.props.onCloseGraphWebhook}>
-          An error prevented checking integration of the project with the Knowledge Graph. Error: &quot;
-          <span className="font-italic">{status.message}</span>&quot;
-        </WarnAlert>
-      );
-    }
-    // ! TODO - FROM HERE
-    --
-    console.log(this.props.webhook.possible)
-    if (this.props.webhook.possible === null)
+    if (webhook.possible === null || webhook.status === SpecialPropVal.UPDATING)
       return (<Loader />);
+
+    if (webhook.status === false) {
+      const isPrivate = visibility && visibility.level === "private" ?
+        true :
+        false;
+      return (
+        <KnowledgeGraphWarning webhook={webhook.created} create={createGraphWebhook} isPrivate={isPrivate} />
+      );
+    }
+
+    const error = webhookError(webhook.status);
+    if (error) {
+      const errorDetails = webhook.status.message ?
+        (<Fragment>
+          <p className="mb-2">Error details:</p>
+          <pre>{webhook.status.message}</pre>
+        </Fragment>) :
+        null;
+      return (
+        <Alert color="danger">
+          <p className="mb-2">An error prevented checking integration of the project with the Knowledge Graph.</p>
+          {errorDetails}
+        </Alert>
+      );
+    }
+
     return (
       <Alert color="success">
         Knowledge Graph integration is active.
@@ -185,19 +192,22 @@ class KnowledgeGraphWarning extends Component {
     const webhook = this.props.webhook;
     if (webhook === true) {
       return (
-        <SuccessAlert dismissCallback={this.props.close}>
+        <Alert color="success">
           Integration with the Knowledge Graph was successful.
-        </SuccessAlert>
+        </Alert>
       );
     }
     else if (webhook === false || webhook === SpecialPropVal.UPDATING) {
       const updating = webhook === SpecialPropVal.UPDATING ? true : false;
       return (
-        <WarnAlert dismissCallback={this.props.close}>
-          Knowledge Graph integration has not been turned on. &nbsp;
-          <KnowledgeGraphPrivateWarning {...this.props} />
-          <KnowledgeGraphLink color="warning" {...this.props} updating={updating} />
-        </WarnAlert>
+        <Alert color="warning">
+          <p>
+            <FontAwesomeIcon icon={faExclamationTriangle} />&nbsp;
+            Knowledge Graph integration has not been turned on.
+          </p>
+          <KnowledgeGraphPrivateInfo {...this.props} />
+          <KnowledgeGraphButton color="warning" {...this.props} updating={updating} />
+        </Alert>
       );
     }
 
@@ -205,23 +215,21 @@ class KnowledgeGraphWarning extends Component {
       `The project was not integrated with the Knowledge Graph. Error: "${webhook.message}".` :
       "An unknown error prevented integration of the project with the Knowledge Graph.";
     return (
-      <ErrorAlert dismissCallback={this.props.close}>
+      <Alert color="danger">
         <p>{error}</p>
-        <KnowledgeGraphLink color="danger" {...this.props} />
-      </ErrorAlert>
+        <KnowledgeGraphButton color="danger" {...this.props} />
+      </Alert>
     );
-
   }
 }
 
-class KnowledgeGraphPrivateWarning extends Component {
+class KnowledgeGraphPrivateInfo extends Component {
   render() {
     if (!this.props.isPrivate) return null;
     return (
-      <p className="font-italic">
-        {/* <span className="font-weight-bold">WARNING! </span> */}
-        <FontAwesomeIcon icon={faExclamationTriangle} /> This is a private project. Though contents remain private,
-        the Knowledge Graph may make some metadata public; only activate if that is acceptable.
+      <p className="font-italic small">
+        This is a private project. Though contents remain private,
+        the Knowledge Graph may make some metadata public. Only activate if that is acceptable.
         <br />
         <a href="https://renku.readthedocs.io/en/latest/user/knowledge-graph.html"
           target="_blank" rel="noopener noreferrer">
@@ -232,15 +240,15 @@ class KnowledgeGraphPrivateWarning extends Component {
   }
 }
 
-class KnowledgeGraphLink extends Component {
+class KnowledgeGraphButton extends Component {
   render() {
     if (this.props.updating) {
       return (
-        <span>Activating... <Loader size="12" inline="true" /></span>
+        <Button color={this.props.color} disabled={true}>Activating... <Loader size="12" inline="true" /></Button>
       );
     }
     return (
-      <Button color={this.props.color} onClick={this.props.create}>Activate Knowledge Graph</Button>
+      <Button color={this.props.color} onClick={this.props.create}>Activate</Button>
     );
   }
 }
@@ -355,14 +363,12 @@ class ProjectViewHeaderOverview extends Component {
             </div>
           </Col>
         </Row>
-        <KnowledgeGraphIntegrationWarningBanner {...this.props} />
         {this.props.fork(this.props)}
       </Container>
     );
   }
 }
 
-// here
 class ProjectViewHeader extends Component {
 
   render() {
@@ -645,12 +651,17 @@ class ProjectViewKG extends Component {
       body = (<Loader />);
     }
     else {
-      body = (<KnowledgeGraphIntegrationWarningBanner {...this.props} />);
+      body = (
+        <KnowledgeGraphIntegration
+          webhook={this.props.webhook}
+          visibility={this.props.visibility}
+          createGraphWebhook={this.props.createGraphWebhook} />
+      );
     }
 
     return (
       <Card className="border-0">
-        <CardHeader>Renku Knowledge Graph</CardHeader>
+        <CardHeader>Knowledge Graph integration</CardHeader>
         <CardBody>
           <Row><Col>{body}</Col></Row>
         </CardBody>

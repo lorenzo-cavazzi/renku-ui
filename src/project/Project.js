@@ -614,11 +614,6 @@ class View extends Component {
       e.preventDefault();
       return this.createGraphWebhook();
     },
-    onCloseGraphWebhook: () => {
-      this.stopCheckingWebhook();
-      this.fetchProjectDatasetsFromKg();
-      this.fetchProjectDatasets(true);
-    },
     fetchGraphStatus: () => {
       return this.fetchGraphStatus();
     },
