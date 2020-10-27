@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import { withContentRect } from "react-measure";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFolder as faFolderClosed, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
@@ -105,9 +106,35 @@ class FilesTreeView extends Component {
     super(props);
     this.state = {
       dropdownOpen: false,
-      treeStructure: this.props.data
+      treeStructure: this.props.data,
+      maxHeight: null
     };
     this.toggle = this.toggle.bind(this);
+
+    //const { measureRef, measure, contentRect } = props;
+    //console.log(measureRef, measure, contentRect)
+  }
+
+  componentDidUpdate(prevProps) {
+    const bottom = Math.ceil(this.props.contentRect.bounds.bottom);
+    const top = Math.floor(this.props.contentRect.bounds.top);
+    const delta = bottom - top;
+    const vh = window.innerHeight;
+    if (bottom >= vh) {
+      console.log("too much!")
+      // if (this.setState.maxHeight !== delta)
+      //   this.setState({ maxHeight: delta});
+    }
+    else {
+      console.log("It's ok")
+      // if (this.setState.maxHeight)
+      //   this.setState({ maxHeight: null});
+      //this.setState({ maxHeight: null});
+    }
+    console.log({ bottom, top, vh, delta });
+    // prevProps is always null cause it gets re-drawed
+    // if (prevProps.contentRect.bounds.bottom && prevProps.contentRect.bounds.bottom !== this.props.contentRect.bounds.bottom)
+    //   console.log(this.props.contentRect.bounds.bottom);
   }
 
   toggle() {
@@ -145,16 +172,16 @@ class FilesTreeView extends Component {
           nodeInsideIsSelected={this.props.currentUrl.endsWith(node.path)}
           currentUrl={this.props.currentUrl}
         />;
-      })
-      :
+      }) :
       null;
 
-    const toFile = emptyView ? this.props.projectUrl.replace("/blob", "") + redirectURL
-      : this.props.projectUrl + redirectURL;
+    const toFile = emptyView ?
+      this.props.projectUrl.replace("/blob", "") + redirectURL :
+      this.props.projectUrl + redirectURL;
     const toLineage = this.props.lineageUrl + redirectURL;
 
-    return (
-      <div className="tree-container">
+    const treeView = (
+      <div ref={this.props.measureRef} className="tree-container">
         <div className="tree-title">
           <span className="tree-header-title text-truncate">
             {fileView ? "File View" : "Lineage View"}
@@ -179,6 +206,8 @@ class FilesTreeView extends Component {
         {tree}
       </div>
     );
+
+    return treeView;
   }
 
 } export default FilesTreeView;
