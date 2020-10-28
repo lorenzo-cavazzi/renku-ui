@@ -108,6 +108,10 @@
     font-weight: 300;
 }
 
+.tree-content {
+    overflow-y: auto;
+}
+
 .lfs-badge{
     border-color:#aaa;
     border-width: 1.3px;

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import { StickyContainer, Sticky } from 'react-sticky';
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFolder as faFolderClosed, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
@@ -7,6 +8,7 @@ import { faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import "./treeviewstyle.css";
+import { autoDetection } from "highlight.js";
 
 
 class TreeNode extends Component {
@@ -67,14 +69,14 @@ class TreeNode extends Component {
       elementToRender =
         <div className={order + " " + hidden + " " + selected}>
           <div className={"fs-element"} >
-            { this.props.fileView ?
-              <Link to= {`${this.props.projectUrl}/${this.props.node.jsonObj.path}`} >
+            {this.props.fileView ?
+              <Link to={`${this.props.projectUrl}/${this.props.node.jsonObj.path}`} >
                 <div className={"fs-element"}>
                   {icon} {this.props.node.name}
                 </div>
               </Link>
               :
-              <Link to= {`${this.props.lineageUrl}/${this.props.node.jsonObj.path}`} >
+              <Link to={`${this.props.lineageUrl}/${this.props.node.jsonObj.path}`} >
                 <div className={"fs-element"}>
                   {icon} {this.props.node.name}
                 </div>
@@ -82,7 +84,7 @@ class TreeNode extends Component {
             }
           </div>
         </div>
-      ;
+        ;
     }
     else {
       const childrenOpen = this.state.childrenOpen ? <div className="pl-3">{children}</div> : null;
@@ -110,6 +112,24 @@ class FilesTreeView extends Component {
     this.toggle = this.toggle.bind(this);
   }
 
+  // computeMaxHeight() {
+  //   // check if the max height must be enforced
+  //   if (!this.props.limitHeight)
+  //     return null;
+
+  //   // on small screens, just limit to 2/3 viewport height
+  //   if (window.innerWidth <= 768)
+  //     return Math.floor(window.innerHeight * 2 / 3);
+
+  //   const bottom = Math.ceil(this.props.contentRect.bounds.bottom);
+  //   const top = Math.floor(this.props.contentRect.bounds.top);
+  //   const vh = window.innerHeight - 70;
+  //   //const maxHeight = vh - top;
+  //   if (bottom >= vh)
+  //     return vh - top;
+  //   return null;
+  // }
+
   toggle() {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen
@@ -117,13 +137,18 @@ class FilesTreeView extends Component {
   }
 
   render() {
+    //const maxHeight = this.computeMaxHeight();
+    let treeContentStyle = {};
+    // if (maxHeight)
+    //   treeContentStyle.maxHeight = maxHeight;
+    // console.log("render", maxHeight)
     const fileView = !this.props.currentUrl.startsWith(this.props.lineageUrl);
 
     const emptyView = this.props.projectUrl.startsWith(this.props.currentUrl)
-    || this.props.lineageUrl.startsWith(this.props.currentUrl);
+      || this.props.lineageUrl.startsWith(this.props.currentUrl);
 
     let redirectURL = "";
-    if (!emptyView ) {
+    if (!emptyView) {
       redirectURL = fileView ?
         this.props.currentUrl.replace(this.props.projectUrl, "")
         : this.props.currentUrl.replace(this.props.lineageUrl, "");
@@ -145,40 +170,117 @@ class FilesTreeView extends Component {
           nodeInsideIsSelected={this.props.currentUrl.endsWith(node.path)}
           currentUrl={this.props.currentUrl}
         />;
-      })
-      :
+      }) :
       null;
 
-    const toFile = emptyView ? this.props.projectUrl.replace("/blob", "") + redirectURL
-      : this.props.projectUrl + redirectURL;
+    const toFile = emptyView ?
+      this.props.projectUrl.replace("/blob", "") + redirectURL :
+      this.props.projectUrl + redirectURL;
     const toLineage = this.props.lineageUrl + redirectURL;
 
-    return (
-      <div className="tree-container">
-        <div className="tree-title">
-          <span className="tree-header-title text-truncate">
-            {fileView ? "File View" : "Lineage View"}
-          </span>
-          <span className="float-right throw-right-in-flex">
-            <Dropdown color="primary" size="sm" isOpen={this.state.dropdownOpen} toggle={this.toggle}>
-              <DropdownToggle caret size="sm" color="primary">
-                { fileView ?
-                  <FontAwesomeIcon className="icon-white" icon={faFile} />
-                  : <FontAwesomeIcon className="icon-white" icon={faProjectDiagram} />
-                }
-              </DropdownToggle>
-              <DropdownMenu>
-                { fileView ?
-                  <Link to={toLineage}><DropdownItem> Lineage View </DropdownItem></Link>
-                  : <Link to={toFile}><DropdownItem>File View</DropdownItem></Link>
-                }
-              </DropdownMenu>
-            </Dropdown>
-          </span>
-        </div>
-        {tree}
-      </div>
+    // // const treeView = (
+    // //   // <div ref={this.props.measureRef} className="tree-container">
+    // //   <div className="tree-container">
+    // //     <div className="tree-title">
+    // //       <span className="tree-header-title text-truncate">
+    // //         {fileView ? "File View" : "Lineage View"}
+    // //       </span>
+    // //       <span className="float-right throw-right-in-flex">
+    // //         <Dropdown color="primary" size="sm" isOpen={this.state.dropdownOpen} toggle={this.toggle}>
+    // //           <DropdownToggle caret size="sm" color="primary">
+    // //             { fileView ?
+    // //               <FontAwesomeIcon className="icon-white" icon={faFile} />
+    // //               : <FontAwesomeIcon className="icon-white" icon={faProjectDiagram} />
+    // //             }
+    // //           </DropdownToggle>
+    // //           <DropdownMenu>
+    // //             { fileView ?
+    // //               <Link to={toLineage}><DropdownItem> Lineage View </DropdownItem></Link>
+    // //               : <Link to={toFile}><DropdownItem>File View</DropdownItem></Link>
+    // //             }
+    // //           </DropdownMenu>
+    // //         </Dropdown>
+    // //       </span>
+    // //     </div>
+    // //     {/* <StickyContainer>
+    // //       <Sticky>
+    // //         {({style}) => (
+    // //           <div style={style}>
+    // //             <div ref={this.props.measureRef} className="tree-content mb-2 mb-md-0" style={treeContentStyle}>
+    // //               {tree}
+    // //             </div>
+    // //           </div>
+    // //         )}
+    // //       </Sticky>
+    // //     </StickyContainer> */}
+    // //     <div ref={this.props.measureRef} className="tree-content mb-2 mb-md-0" style={treeContentStyle}>
+    // //       {tree}
+    // //     </div>
+    // //   </div>
+    // // );
+
+    const treeView = (
+      <StickyContainer>
+        <Sticky topOffset={-10}>
+          {({ style, calculatedHeight, distanceFromBottom, distanceFromTop }) => {
+            // ? !distanceFromBottom ?
+            //   console.log(document.getElementById("scroll")) :
+            //   null
+            // console.log(distanceFromBottom, distanceFromTop, calculatedHeight)
+            const elem = document.getElementById("scroll")
+            const compute = !distanceFromBottom && elem;
+            if (compute) {
+              // rest window scroll
+              // if (window.scrollY !== 0)
+              //   window.scrollTo(window.scrollX, 0);
+              if (elem.scrollTop === 0)
+                elem.scrollTo(elem.scrollLeft, 1);
+              else
+                elem.scrollTo(elem.scrollLeft, 0);
+            }
+            console.log(distanceFromBottom, calculatedHeight)
+
+            const newStyle = {
+              ...style,
+              top: 10,
+              //overflow: "auto",
+              maxHeight: window.innerHeight - 80 - (distanceFromBottom && distanceFromBottom > 0 ? distanceFromBottom : 0)
+            };
+            return (
+              <div className="tree-container" style={newStyle}>
+                {/* <div className="tree-container"> */}
+                <div className="tree-title">
+                  <span className="tree-header-title text-truncate">
+                    {fileView ? "File View" : "Lineage View"}
+                  </span>
+                  <span className="float-right throw-right-in-flex">
+                    <Dropdown color="primary" size="sm" isOpen={this.state.dropdownOpen} toggle={this.toggle}>
+                      <DropdownToggle caret size="sm" color="primary">
+                        {fileView ?
+                          <FontAwesomeIcon className="icon-white" icon={faFile} />
+                          : <FontAwesomeIcon className="icon-white" icon={faProjectDiagram} />
+                        }
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        {fileView ?
+                          <Link to={toLineage}><DropdownItem> Lineage View </DropdownItem></Link>
+                          : <Link to={toFile}><DropdownItem>File View</DropdownItem></Link>
+                        }
+                      </DropdownMenu>
+                    </Dropdown>
+                  </span>
+                </div>
+                <div id="scroll" className="tree-content mb-2 mb-md-0" style={treeContentStyle}>
+                  {tree}
+                </div>
+              </div>
+            );
+          }}
+        </Sticky>
+      </StickyContainer>
     );
+
+    return treeView;
   }
 
 } export default FilesTreeView;

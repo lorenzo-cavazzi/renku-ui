@@ -33,6 +33,7 @@ import {
   UncontrolledCollapse
 } from "reactstrap";
 import qs from "query-string";
+import { withContentRect } from "react-measure";
 
 import filesize from "filesize";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -442,19 +443,45 @@ class ProjectNav extends Component {
 
 class ProjectFilesNav extends Component {
   render() {
+    //console.log("render ProjectFilesNav")
     const loading = isRequestPending(this.props, "filesTree");
     const allFiles = this.props.filesTree || [];
     if ((loading && Object.keys(allFiles).length < 1) || this.props.filesTree === undefined)
       return <Loader />;
 
-    return <FilesTreeView
-      data={this.props.filesTree}
-      lineageUrl={this.props.lineagesUrl}
-      projectUrl={this.props.fileContentUrl}
-      setOpenFolder={this.props.setOpenFolder}
-      hash={this.props.filesTree.hash}
-      fileView={this.props.filesTreeView}
-      currentUrl={this.props.location.pathname} />;
+    const fileTree = (
+      <FilesTreeView
+        data={this.props.filesTree}
+        lineageUrl={this.props.lineagesUrl}
+        projectUrl={this.props.fileContentUrl}
+        setOpenFolder={this.props.setOpenFolder}
+        hash={this.props.filesTree.hash}
+        fileView={this.props.filesTreeView}
+        limitHeight={true}
+        currentUrl={this.props.location.pathname} />
+    );
+
+    // const FileTreeReact = withContentRect(["bounds", "offset", "scroll"])(
+    //   ({ measureRef, measure, contentRect }) => (
+    //     <FilesTreeView
+    //       data={this.props.filesTree}
+    //       lineageUrl={this.props.lineagesUrl}
+    //       projectUrl={this.props.fileContentUrl}
+    //       setOpenFolder={this.props.setOpenFolder}
+    //       hash={this.props.filesTree.hash}
+    //       fileView={this.props.filesTreeView}
+    //       measureRef={measureRef}
+    //       //ref={measureRef}
+    //       limitHeight={true}
+    //       measure={measure}
+    //       contentRect={contentRect}
+    //       currentUrl={this.props.location.pathname} />
+    //   )
+    // );
+
+    // const fileTree = <FileTreeReact />;
+
+    return fileTree;
   }
 }
 

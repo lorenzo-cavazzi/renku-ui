@@ -308,7 +308,7 @@ class FooterNavbar extends Component {
       (<RenkuNavLink to="/privacy" title="Privacy" />) :
       null;
     return (
-      <footer className="footer">
+      <footer className="footer" id="page-footer">
         <Navbar className="flex-nowrap">
           <span>&copy; SDSC {(new Date()).getFullYear()}</span>
           <Nav className="ml-auto">
