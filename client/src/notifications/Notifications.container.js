@@ -165,6 +165,8 @@ class NotificationsMenu extends Component {
       addMultipleNotifications: this.addMultipleNotifications.bind(this), // ! TEMP - only for testing
       addRandomNotification: this.addRandomNotification.bind(this), // ! TEMP - only for testing
     };
+    // ! TEMP - only for testing
+    this.addMultipleNotifications();
   }
 
   // ! TEMP - only for testing

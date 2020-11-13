@@ -57,17 +57,20 @@
   position: absolute;
 }
 
-.notification.info svg.svg-inline--fa {
+.notification.info svg.svg-inline--fa.color {
   color: #5561A6
 }
-.notification.success svg.svg-inline--fa {
+.notification.success svg.svg-inline--fa.color {
   color: #28a745
 }
-.notification.warning svg.svg-inline--fa {
+.notification.warning svg.svg-inline--fa.color {
   color: #ffc107
 }
-.notification.error svg.svg-inline--fa {
+.notification.error svg.svg-inline--fa.color {
   color: #dc3545
+}
+.notification.read svg.svg-inline--fa.color {
+  color: rgba(0, 0, 0, 0.5)
 }
 
 .notification-menu > a {
@@ -106,34 +109,39 @@
   font-size: 120%;
 }
 
-.notification-page-item {
+.notification-page-item > .notification {
+  max-width: 1140px;
+  width: 100%;
+}
+
+.notification-page-item-old {
   margin: 12px 0;
   border-top: 1px solid #dee2e6;
 }
 
-.notification-page-item > div.notification {
+.notification-page-item-old > div.notification {
   margin: 12px 0;
 }
 
-.notification-page-item > .notification p {
+.notification-page-item-old > .notification p {
   margin-bottom: 6px;
 }
 
-.notification-page-item > .notification h4 .time-caption {
+.notification-page-item-old > .notification h4 .time-caption {
   font-size: 70%;
 }
 
-.notification-page-item > .notification.unread {
+.notification-page-item-old > .notification.unread {
   border-left: 5px solid #5561A6;
   padding-left: 6px;
 }
 
-.notification-page-item > .notification.unread.success {
+.notification-page-item-old > .notification.unread.success {
   border-color: #28a745;
 }
-.notification-page-item > .notification.unread.warning {
+.notification-page-item-old > .notification.unread.warning {
   border-color: #ffc107;
 }
-.notification-page-item > .notification.unread.error {
+.notification-page-item-old > .notification.unread.error {
   border-color: #dc3545;
 }
