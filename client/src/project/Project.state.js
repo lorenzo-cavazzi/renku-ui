@@ -24,7 +24,7 @@
  */
 
 import { API_ERRORS } from "../api-client";
-import { StateModel, SpecialPropVal, projectSchema, projectGlobalSchema } from "../model";
+import { StateModel, SpecialPropVal, projectSchema, projectGlobalSchema, projectStatisticsSchema } from "../model";
 import { isNullOrUndefined } from "util";
 import { splitAutosavedBranches } from "../utils/HelperFunctions";
 
@@ -165,6 +165,10 @@ class ProjectModel extends StateModel {
     return client.getProject(projectPathWithNamespace, { statistics: true })
       .then(resp => resp.data)
       .then(d => {
+        const statistics = d.metadata.statistics ?
+          d.metadata.statistics :
+          {};
+        console.log(d.metadata.statistics)
         const updatedState = {
           core: { ...d.metadata.core, available: true },
           system: {
@@ -172,7 +176,7 @@ class ProjectModel extends StateModel {
             tag_list: { $set: d.metadata.system.tag_list } // fix empty tag_list not updating
           },
           visibility: d.metadata.visibility,
-          statistics: d.metadata.statistics
+          statistics: { $set: statistics },
         };
         this.setObject(updatedState);
         return d;
@@ -402,8 +406,10 @@ class ProjectCoordinator {
     });
   }
 
-  setProjectData(data) {
+  setProjectData(data, statistics = false) {
     let metadata;
+
+    // set metadata
     if (!data) {
       metadata = {
         $set: {
@@ -426,8 +432,43 @@ class ProjectCoordinator {
         fetching: false
       };
     }
-    this.model.setObject({ metadata: metadata });
+
+    // set statistics
+    let statsObject = {};
+    if (statistics) {
+      const stats = data.all.statistics ?
+        data.all.statistics :
+        projectStatisticsSchema.createInitialized();
+      statsObject = {
+        data: stats,
+        fetched: new Date(),
+        fetching: false
+      };
+    }
+
+    this.model.setObject({ metadata: metadata, statistics: statsObject });
     return metadata;
+  }
+
+  async fetchStats(pathWithNamespace) {
+    if (this.model.get("statistics.fetching"))
+      return;
+    if (!pathWithNamespace)
+      pathWithNamespace = this.model.get("metadata.pathWithNamespace");
+    if (!pathWithNamespace)
+      return;
+    this.model.set("statistics.fetching", true);
+    const resp = await this.client.getProject(pathWithNamespace, { statistics: true });
+    const stats = resp.data.statistics ?
+      resp.data.statistics :
+      projectStatisticsSchema.createInitialized();
+    const statsObject = {
+      fetching: false,
+      fetched: new Date(),
+      statistics: { $set: stats }
+    };
+    this.model.setObject({ statistics: statsObject });
+    return stats;
   }
 
   async fetchCommits(customFilters = null) {

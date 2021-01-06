@@ -388,6 +388,16 @@ class ProjectViewStats extends Component {
 
     const system = this.props.system;
     const stats = this.props.statistics;
+    //console.log(stats)
+    const storage_size = stats.storage_size ?
+      fileSize(stats.storage_size) :
+      "N/A";
+    const repository_size = stats.repository_size ?
+      fileSize(stats.repository_size) :
+      "N/A";
+    const lfs_size = stats.lfs_objects_size ?
+      fileSize(stats.lfs_objects_size) :
+      "N/A";
     return [
       <Card key="project-stats" className="border-0">
         <CardHeader>Project Statistics</CardHeader>
@@ -430,15 +440,15 @@ class ProjectViewStats extends Component {
                 <tbody>
                   <tr>
                     <th scope="row">Storage Size</th>
-                    <td>{fileSize(stats.storage_size)}</td>
+                    <td>{storage_size}</td>
                   </tr>
                   <tr>
                     <th scope="row">Repository Size</th>
-                    <td>{fileSize(stats.repository_size)}</td>
+                    <td>{repository_size}</td>
                   </tr>
                   <tr>
                     <th scope="row">LFS Size</th>
-                    <td>{fileSize(stats.lfs_objects_size)}</td>
+                    <td>{lfs_size}</td>
                   </tr>
                 </tbody>
               </Table>
