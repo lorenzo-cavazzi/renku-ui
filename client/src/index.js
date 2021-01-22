@@ -66,17 +66,59 @@ Promise.all([configFetch, privacyFetch]).then(valuesRead => {
 
     // configure Sentry
     if (params.SENTRY_URL) {
-      Sentry.init({ dsn: params.SENTRY_URL });
-      Sentry.configureScope(scope => { scope.setTag("environment", params.SENTRY_NAMESPACE); });
+      Sentry.init({
+        dsn: params.SENTRY_URL,
+        environment: params.SENTRY_NAMESPACE ? params.SENTRY_NAMESPACE : "unknown",
+        // tracesSampler(samplingContext) {
+        //   console.log("here")
+        //   console.log(samplingContext)
+        // },
+        beforeSend(event, hint) {
+          // ? return null to prevent sending the exception to sentry
+          console.log(event, hint)
+
+          // filter errors while previewing the notebooks
+          if (event.request.url.includes("/files/blob/") && event.request.url.includes(".ipynb"))
+            return null;
+          
+          // prevent 
+
+          return event;
+        },
+        denyUrls: [
+          /extensions\//i, // Chrome extensions 1
+          /^chrome:\/\//i, // Chrome extensions 2
+        ],
+      });
+      Sentry.setTags({
+        component: "renku-ui",
+        version: params.UI_VERSION
+      });
+      //Sentry.setTag("component", "renku-ui");
+      //Sentry.setTag("environment", params.SENTRY_NAMESPACE);
+      //Sentry.setTag("version", params.UI_VERSION);
+      // Sentry.configureScope(scope => {
+      //   scope.setTag("component", "renku-ui");
+      //   scope.setTag("environment", params.SENTRY_NAMESPACE);
+      //   scope.setTag("version", params.UI_VERSION);
+      // });
+      //Sentry.configureScope(scope => { scope.setTag("version", params.UI_VERSION); });
       userPromise.then(data => {
-        let user = { logged: false, id: 0, username: null };
+        let user = { logged: false, id: 0, username: null, email: null, signIn: null };
         if (data && data.id) {
           user.logged = true;
           user.id = data.id;
           user.username = data.username;
+          user.email = data.email;
+          user.signIn = data.current_sign_in_at;
         }
+        //console.log(data, user);
         // eslint-disable-next-line
-        Sentry.configureScope(scope => { scope.setUser(user); });
+        //Sentry.configureScope(scope => { scope.setUser(user); });
+        Sentry.setUser(user);
+        if (user.username)
+          Sentry.setTag("user.username", user.username);
+        console.testForSentry3()
       });
     }
 
