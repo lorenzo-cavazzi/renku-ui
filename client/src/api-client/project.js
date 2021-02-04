@@ -172,6 +172,7 @@ function addProjectMethods(client) {
     });
   };
 
+  // TODO - change this to query in a recursively
   client.searchUsersOrGroups = (queryParams, searchIn) => {
     let headers = client.getBasicHeaders();
     if (searchIn === "groups")

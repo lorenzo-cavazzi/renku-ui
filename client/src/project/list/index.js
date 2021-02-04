@@ -24,7 +24,8 @@
  */
 
 import List from "./ProjectList.container";
+import { ProjectList } from "./ProjectList.container";
 import { ProjectListRow } from "./ProjectList.present";
 
 export default List;
-export { ProjectListRow };
+export { ProjectListRow, ProjectList };

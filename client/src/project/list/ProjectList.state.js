@@ -153,11 +153,13 @@ class ProjectListModel extends StateModel {
   searchProjects(searchParams) {
     return this.client.getProjects(searchParams)
       .then(response => {
+        // console.log("__state__", "searchProjects", searchParams, response);
         this.manageResponse(response);
       });
   }
 
   searchProjectsByUsernameOrGroup(searchIn, queryParams, search, selectedUserOrGroupId) {
+    console.log("__state__", "searchProjectsByUsernameOrGroup", searchIn, queryParams, search, selectedUserOrGroupId);
     return this.client.searchUsersOrGroups({ search }, searchIn)
       .then(response => {
         this.setUsersOrGroupsList(response);
