@@ -24,5 +24,6 @@
  */
 
 import { NewProject } from "./ProjectNew.container";
+import { validateTitle, checkTitleDuplicates } from "./ProjectNew.state";
 
-export { NewProject };
+export { NewProject, validateTitle, checkTitleDuplicates };

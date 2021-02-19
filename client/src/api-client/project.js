@@ -203,7 +203,7 @@ function addProjectMethods(client) {
 
   client.getEmptyProjectObject = () => { return { folder: "empty-project-template", name: "Empty Project" }; };
 
-  client.getProjectStatus = (projectId) => {
+  client.getProjectStatus = async (projectId) => {
     const headers = client.getBasicHeaders();
     headers.append("Content-Type", "application/json");
     return client.clientFetch(`${client.baseUrl}/projects/${projectId}/import`, {
@@ -214,6 +214,7 @@ function addProjectMethods(client) {
     }).catch((error) => "error");
   };
 
+  // REMOVE
   client.startPipeline = (projectId) => {
     const headers = client.getBasicHeaders();
     headers.append("Content-Type", "application/json");
@@ -240,6 +241,7 @@ function addProjectMethods(client) {
     }, 3000);
   };
 
+  // REMOVE
   function redirectWhenForkFinished(projectId, projectPathWithNamespace, history) {
     const headers = client.getBasicHeaders();
     headers.append("Content-Type", "application/json");
@@ -265,14 +267,40 @@ function addProjectMethods(client) {
     }, 3000);
   }
 
-  client.forkProject = (projectSchema, history) => {
+  client.forkProject = async (sourceId, targetTitle, targetPath, targetNamespace) => {
+    const headers = client.getBasicHeaders();
+    headers.append("Content-Type", "application/json");
+
+    // Fork the project
+    const urlFork = `${client.baseUrl}/projects/${sourceId}/fork`;
+    const bodyFork = { id: sourceId, name: targetTitle, path: targetPath, namespace_path: targetNamespace };
+
+    const forkedProject = await client.clientFetch(urlFork, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(bodyFork)
+    });
+
+    // Start pipeline for the new project
+    const pipeline = client.startPipeline(forkedProject.data.id);
+
+    // Create KG webhook
+    const webhook = await client.createGraphWebhook(forkedProject.data.id);
+    return { project: forkedProject.data, pipeline, webhook };
+  };
+
+  // REMOVE
+  client.forkProjectOLD = (projectSchema, history) => {
+    console.log(projectSchema);
+    //return;
     const projectMeta = projectSchema.meta;
     const gitlabProject = {
-      id: projectMeta.id,
-      name: projectSchema.display.title,
-      path: projectSchema.display.slug
+      id: projectMeta.id,                // Source ID
+      name: projectSchema.display.title, // Target Title
+      path: projectSchema.display.slug   // Target Title
     };
-    if (projectMeta.projectNamespace != null) gitlabProject.namespace = projectMeta.projectNamespace.id;
+    if (projectMeta.projectNamespace != null)
+      gitlabProject.namespace = projectMeta.projectNamespace.id; // Target Namespace
     const headers = client.getBasicHeaders();
     headers.append("Content-Type", "application/json");
 

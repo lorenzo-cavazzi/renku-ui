@@ -38,6 +38,9 @@ import "../new/Project.style.css";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 
 
+
+// OLD
+
 class ProjectPath extends Component {
   constructor(props) {
     super(props);

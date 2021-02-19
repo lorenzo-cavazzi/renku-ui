@@ -31,6 +31,9 @@ import { forkProjectSchema } from "../../model/RenkuModels";
 import ForkProjectModal from "./ProjectFork.present";
 
 
+
+// OLD
+
 class Fork extends Component {
   constructor(props) {
     super(props);
@@ -80,7 +83,7 @@ class Fork extends Component {
 
 
     this.forkProject.set("display.loading", true);
-    this.props.client.forkProject(this.forkProject.get(), this.props.history)
+    this.props.client.forkProjectOLD(this.forkProject.get(), this.props.history)
       .catch(error => {
         let display_messages = [];
         if (error.errorData && error.errorData.message) {
@@ -181,3 +184,4 @@ class Fork extends Component {
 
 
 export default Fork;
+
