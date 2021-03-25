@@ -43,7 +43,7 @@ import {
 } from "../utils/UIComponents";
 import { Url } from "../utils/url";
 import { SpecialPropVal } from "../model/Model";
-import { ProjectTags, ProjectTagList } from "./shared";
+import { ProjectAvatarEdit, ProjectTags, ProjectTagList } from "./shared";
 import { Notebooks, StartNotebookServer } from "../notebooks";
 import Issue from "../collaboration/issue/Issue";
 import { CollaborationList, collaborationListTypeMap } from "../collaboration/lists/CollaborationList.container";
@@ -54,6 +54,7 @@ import ProjectVersionStatus from "./status/ProjectVersionStatus.present";
 import { NamespaceProjects } from "../namespace";
 import { ProjectOverviewCommits, ProjectOverviewStats } from "./overview";
 import { ForkProject } from "./new";
+
 
 import "./Project.css";
 
@@ -1065,7 +1066,7 @@ function RepositoryUrlRow(props) {
 class RepositoryUrls extends Component {
   render() {
     return (
-      <Fragment>
+      <div>
         <Label className="font-weight-bold">Repository URL</Label>
         <Table size="sm">
           <tbody>
@@ -1073,7 +1074,7 @@ class RepositoryUrls extends Component {
             <RepositoryUrlRow urlType="HTTP" url={this.props.system.http_url} />
           </tbody>
         </Table>
-      </Fragment>
+      </div>
     );
   }
 }
@@ -1096,11 +1097,11 @@ function GitCloneCmd(props) {
   const gitClone = `git clone ${externalUrl}.git && cd ${projectPath} && git lfs install --local --force`;
   const gitHooksInstall = "renku githooks install"; // eslint-disable-line
   return (cmdOpen) ?
-    <div style={{ fontSize: "smaller" }} className="mt-3">
-      <p className="font-italic">
+    <div className="mt-3">
+      <p style={{ fontSize: "smaller" }} className="font-italic">
         If the <b>renku</b> command is not available, you can clone a project using Git.
       </p>
-      <Table size="sm" className="mb-0" borderless={true}>
+      <Table style={{ fontSize: "smaller" }} size="sm" className="mb-0" borderless={true}>
         <tbody>
           <tr>
             <th scope="row">Git<sup>*</sup></th>
@@ -1122,7 +1123,7 @@ function GitCloneCmd(props) {
           </tr>
         </tbody>
       </Table>
-      <Button color="link" onClick={() => setCmdOpen(false)}>
+      <Button style={{ fontSize: "smaller" }} color="link" onClick={() => setCmdOpen(false)}>
         Hide git command
       </Button>
     </div> :
@@ -1138,7 +1139,7 @@ class RepositoryClone extends Component {
     const { externalUrl } = this.props;
     const renkuClone = `renku clone ${externalUrl}.git`;
     return (
-      <Fragment>
+      <div>
         <Label className="font-weight-bold">Clone commands</Label>
         <Table size="sm" className="mb-0">
           <tbody>
@@ -1146,7 +1147,7 @@ class RepositoryClone extends Component {
           </tbody>
         </Table>
         <GitCloneCmd externalUrl={externalUrl} projectPath={this.props.core.project_path} />
-      </Fragment>
+      </div>
     );
   }
 }
@@ -1187,24 +1188,29 @@ class ProjectDescription extends Component {
   }
 }
 
-class ProjectSettings extends Component {
-  render() {
-    return <Col key="settings" xs={12}>
-      <Row>
-        <Col xs={12} lg={6}>
-          <ProjectTags
-            tag_list={this.props.system.tag_list}
-            onProjectTagsChange={this.props.onProjectTagsChange}
-            settingsReadOnly={this.props.settingsReadOnly} />
-          <ProjectDescription {...this.props} />
-        </Col>
-        <Col xs={12} lg={6}>
-          <RepositoryUrls {...this.props} />
-          <RepositoryClone {...this.props} />
-        </Col>
-      </Row>
-    </Col>;
-  }
+function ProjectSettings(props) {
+  return <Col key="settings" xs={12}>
+    <Row>
+      <Col xs={12} lg={6}>
+        <ProjectTags
+          tag_list={props.system.tag_list}
+          onProjectTagsChange={props.onProjectTagsChange}
+          settingsReadOnly={props.settingsReadOnly} />
+        <ProjectDescription {...props} />
+      </Col>
+      <Col xs={12} lg={6}>
+        <RepositoryClone {...props} />
+        <RepositoryUrls {...props} />
+      </Col>
+    </Row>
+    <Row>
+      <Col xs={12} lg={6}>
+        <ProjectAvatarEdit externalUrl={props.externalUrl}
+          avatarUrl={props.core.avatar_url} onAvatarChange={props.onAvatarChange}
+          settingsReadOnly={props.settingsReadOnly} />
+      </Col>
+    </Row>
+  </Col>;
 }
 
 class ProjectViewNotFound extends Component {
