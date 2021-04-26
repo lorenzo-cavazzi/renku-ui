@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 - Swiss Data Science Center (SDSC)
+ * Copyright 2021 - Swiss Data Science Center (SDSC)
  * A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
  * Eidgenössische Technische Hochschule Zürich (ETHZ).
  *
@@ -38,6 +38,10 @@ function register(app: express.Application): void {
   app.get("/ui-server", (req, res) => {
     res.send("Hello ingress!");
   });
+
+  // app.get("/ui-server/servers", (req, res) => {
+
+  // });
 }
 
 export default { register };

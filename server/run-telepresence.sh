@@ -93,6 +93,9 @@ fi
 # to include `--method inject-tcp`
 # Reference: https://www.telepresence.io/reference/methods
 
+# GATEWAY_URL=${BASE_URL}/api
+# export GATEWAY_URL=${GATEWAY_URL}
+
 if [[ "$DEBUG" ]]
 then
   telepresence --swap-deployment ${SERVICE_NAME} --namespace ${DEV_NAMESPACE} --expose 8080:8080 --expose 9229:9229 --run npm run dev-debug

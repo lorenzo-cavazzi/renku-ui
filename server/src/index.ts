@@ -20,9 +20,18 @@ import express from "express";
 import logger from "./logger";
 import routes from "./routes";
 import morgan from "morgan";
+import websockets from "./websockets";
+import ApiClient from "./api-client";
+
+//import WebSocket from "ws";
+//var expressWs = require('express-ws')(app);
+// import expressWs from "express-ws";
+// import ws from "ws"; // * working
 
 const app = express();
+//const appWs = expressWs(app);
 const port = 8080; // default port to listen
+//appWs.getWss().
 
 // configure logging
 const logStream = {
@@ -32,13 +41,57 @@ const logStream = {
 };
 app.use(morgan("combined", { stream: logStream }));
 
+// create api client
+const apiClient = new ApiClient(logger, process.env.BASE_URL, process.env.GATEWAY_URL);
 
 routes.register(app);
 
 // start the Express server
 const server = app.listen(port, () => {
-  logger.info(`server started at http://localhost:${port}`);
+  logger.info(`Server started at http://localhost:${port}`);
+  logger.info(`Gateway URL: ${process.env.GATEWAY_URL}`);
 });
+
+// setup WebSockets
+websockets.websocketsSetup(server, logger, apiClient);
+
+// start the WebSocket server
+// ? https://github.com/websockets/ws
+// TODO: scroll down to read more about paths and client authentication
+// const wsServer = new ws.Server({ noServer: true });
+// const wsServer = new ws.Server({ server }); // * working
+
+// JUST A TEST -- TO BE EXPLORED BETTER
+// handle upgrade of the request
+// ? REF: https://dev.to/ksankar/websockets-with-react-express-part-1-4o68
+// wsServer.on("upgrade", function upgrade(request, socket, head) {
+//   try {
+//     // authentication and some other steps will come here
+//     // we can choose whether to upgrade or not
+
+//     wsServer.handleUpgrade(request, socket, head, function done(ws) {
+//       wsServer.emit("connection", ws, request);
+//     });
+//   } catch (err) {
+//     console.log("upgrade exception", err);
+//     socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+//     socket.destroy();
+//     return;
+//   }
+// });
+
+// ? REF: https://masteringjs.io/tutorials/express/websockets
+// ? REF: https://stackoverflow.com/questions/63099518/sending-a-websocket-message-from-a-post-request-handler-in-express
+// wsServer.on("connection", socket => { // * working
+//   logger.info("enstablished connection"); // * working
+//   socket.send("Connection enstablished"); // * working
+//   socket.on("message", message => { // * working
+//     logger.info(`WebSocket: ${message}`); // * working
+//     socket.send(`Received: ${message}`); // * working
+//   }); // * working
+// }); // * working
+
+// ? test with: webSocket = new WebSocket("wss://lorenzo.dev.renku.ch/ui-server", "abc")
 
 process.on("SIGTERM", () => {
   server.close(() => {
