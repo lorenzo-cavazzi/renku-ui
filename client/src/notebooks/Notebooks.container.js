@@ -21,10 +21,109 @@ import { connect } from "react-redux";
 
 import { NotebooksCoordinator } from "./Notebooks.state";
 import {
-  StartNotebookServer as StartNotebookServerPresent, NotebooksDisabled, Notebooks as NotebooksPresent, CheckNotebookIcon
+  StartNotebookServer as StartNotebookServerPresent, NotebooksDisabled, Notebooks as NotebooksPresent,
+  CheckNotebookIcon, ShowSession as ShowSessionPresent
 } from "./Notebooks.present";
 import { StatusHelper } from "../model/Model";
 import { ProjectCoordinator } from "../project";
+
+
+/**
+ * This component is needed to map properties from the redux store and keep local states cleared by the
+ * mapping function. We can remove it when we switch to the useSelector hook
+ *
+ * @param {object} props.client - client object
+ * @param {object} props.model - redux model
+ * @param {object} props.history - react history object
+ * @param {object} props.match - react match object
+ *
+ * @param {object} props.notifications - notifications object
+ * @param {string} props.title - reference project title
+ * @param {number} props.id - reference project id
+ * @param {function} props.toggleModal - function to toggle the modal on and off
+ */
+class ShowSessionMapper extends Component {
+  constructor(props) {
+    super(props);
+    this.model = props.model.subModel("notebooks");
+    this.userModel = props.model.subModel("user");
+    this.coordinator = new NotebooksCoordinator(props.client, this.model, this.userModel);
+    this.coordinator.reset();
+    this.target = props.match.params.server;
+
+    if (props.scope)
+      this.coordinator.setNotebookFilters(props.scope, true);
+
+    this.handlers = {
+      stopNotebook: this.stopNotebook.bind(this),
+      fetchLogs: this.fetchLogs.bind(this),
+    };
+  }
+
+  componentDidMount() {
+    if (!this.props.blockAnonymous)
+      this.coordinator.startNotebookPolling();
+  }
+
+  componentWillUnmount() {
+    this.coordinator.stopNotebookPolling();
+  }
+
+  stopNotebook(serverName, force) {
+    this.coordinator.stopNotebook(serverName, force);
+  }
+
+  async fetchLogs(serverName, full = false) {
+    if (!serverName)
+      return;
+    return this.coordinator.fetchLogs(serverName, full);
+  }
+
+  mapStateToProps(state, ownProps) {
+    const notebooks = state.notebooks.notebooks;
+    const available = notebooks.all[this.target] ?
+      true :
+      false;
+    const notebook = {
+      available,
+      fetched: notebooks.fetched,
+      fetching: notebooks.fetching,
+      data: available ?
+        notebooks.all[this.target] :
+        {},
+      logs: state.notebooks.logs
+    };
+    return {
+      handlers: this.handlers,
+      target: this.target,
+      filters: state.notebooks.filters,
+      notebook
+    };
+  }
+
+
+  render() {
+    if (this.props.blockAnonymous)
+      return <NotebooksDisabled location={this.props.location} />;
+
+    const ShowSessionMapped = connect(this.mapStateToProps.bind(this))(ShowSessionPresent);
+    return (
+      <ShowSessionMapped
+        store={this.model.reduxStore}
+      />
+    );
+  }
+}
+
+//* /environments/session/<id>
+/**
+ * Display the notebook in an embedded iframe
+ *
+ * @param {props.}
+ */
+// function ShowSession(props) {
+//   return null;
+// }
 
 /**
  * Display the list of Notebook servers
@@ -63,6 +162,7 @@ class Notebooks extends Component {
       stopNotebook: this.stopNotebook.bind(this),
       fetchLogs: this.fetchLogs.bind(this),
       toggleLogs: this.toggleLogs.bind(this),
+      // ! TODO: something is not working as expected here
       fetchCommit: this.fetchCommit.bind(this)
     };
   }
@@ -502,4 +602,4 @@ class CheckNotebookStatus extends Component {
   }
 }
 
-export { Notebooks, StartNotebookServer, CheckNotebookStatus };
+export { ShowSessionMapper as ShowSession, Notebooks, StartNotebookServer, CheckNotebookStatus };
