@@ -19,6 +19,7 @@ class TreeNode extends Component {
   }
 
   handleFileClick() {
+    console.log("handleFileClick", this.props.node.path)
     const treeElem = document.getElementById("tree-content");
     if (treeElem) {
       this.props.savePosition({
@@ -29,8 +30,16 @@ class TreeNode extends Component {
   }
 
   handleIconClick() {
+    console.log("handleIconClick 2", `${this.props.projectUrl}/${this.props.node.jsonObj.path}`, this.props.node)
     this.props.setOpenFolder(this.props.path);
+    console.log(this.props.path, this.props.node.path)
     this.setState((prevState) => ({ childrenOpen: !prevState.childrenOpen }));
+    const url = this.props.projectUrl && this.props.node.jsonObj.path ?
+      `${this.props.projectUrl}/${this.props.node.jsonObj.path}` :
+      null;
+    // if (url)
+    //   this.props.history.push(url);
+    //this.handleFileClick();
   }
 
   componentDidUpdate(previousProps) {
@@ -64,44 +73,80 @@ class TreeNode extends Component {
           nodeInsideIsSelected={this.props.currentUrl.endsWith(node.path)}
           currentUrl={this.props.currentUrl}
           savePosition={this.props.savePosition}
+          history={this.props.history}
         />;
       })
       : null;
 
     let elementToRender;
-    let selected = this.props.nodeInsideIsSelected ? " selected-file " : "";
+    let selected = this.props.nodeInsideIsSelected ?
+      " selected-file " :
+      "";
+
+    const urlPrefix = this.props.fileView ?
+      this.props.projectUrl :
+      this.props.lineageUrl;
+    const targetUrl = `${urlPrefix}/${this.props.node.jsonObj.path}`;
 
     if (this.props.node.type === "blob" || this.props.node.type === "commit") {
       elementToRender =
         <div className={order + " " + hidden + " " + selected}>
-          <div className={"fs-element"} onClick={this.handleFileClick}>
-            { this.props.fileView ?
-              <Link to= {`${this.props.projectUrl}/${this.props.node.jsonObj.path}`} >
-                <div className={"fs-element"}>
-                  {icon} {this.props.node.name}
-                </div>
-              </Link>
-              :
-              <Link to= {`${this.props.lineageUrl}/${this.props.node.jsonObj.path}`} >
-                <div className={"fs-element"}>
-                  {icon} {this.props.node.name}
-                </div>
-              </Link>
-            }
+          <div className="fs-element" onClick={this.handleFileClick}>
+            <Link to={targetUrl} >
+              <div className="fs-element">
+                {icon} {this.props.node.name}
+              </div>
+            </Link>
           </div>
         </div>
       ;
     }
     else {
-      const childrenOpen = this.state.childrenOpen ? <div className="ps-3">{children}</div> : null;
+      const childrenOpen = this.state.childrenOpen ?
+        (<div className="ps-3">{children}</div>) :
+        null;
       elementToRender =
-        <div className={order + " " + hidden} >
-          <div className={"fs-element"} onClick={this.handleIconClick} >
+        <div className={order + " " + hidden + " " + selected} >
+          <div className="fs-element" onClick={this.handleIconClick} >
             {icon} {this.props.node.name}
           </div>
           {childrenOpen}
         </div>;
     }
+
+    // if (this.props.node.type === "blob" || this.props.node.type === "commit") {
+    //   const targetUrl = this.props.fileView ?
+    //     `${this.props.projectUrl}/${this.props.node.jsonObj.path}` :
+    //     `${this.props.lineageUrl}/${this.props.node.jsonObj.path}`;
+
+    //   elementToRender =
+    //     <div className={order + " " + hidden + " " + selected}>
+    //       <div className="fs-element" onClick={this.handleFileClick}>
+    //         <Link to={targetUrl} >
+    //           <div className="fs-element">
+    //             {icon} {this.props.node.name}
+    //           </div>
+    //         </Link>
+    //       </div>
+    //     </div>
+    //   ;
+    // }
+    // else {
+    //   const targetUrl = this.props.fileView ?
+    //     `${this.props.projectUrl}/${this.props.node.jsonObj.path}` :
+    //     `${this.props.lineageUrl}/${this.props.node.jsonObj.path}`;
+
+    //   const childrenOpen = this.state.childrenOpen ?
+    //     (<div className="ps-3">{children}</div>) :
+    //     null;
+    //   elementToRender =
+    //     <div className={order + " " + hidden} >
+    //       <div className="fs-element" onClick={this.handleIconClick} >
+    //         {icon} {this.props.node.name}
+    //       </div>
+    //       {childrenOpen}
+    //     </div>;
+    // }
 
     return elementToRender;
   }
@@ -180,6 +225,7 @@ class FilesTreeView extends Component {
           nodeInsideIsSelected={this.props.currentUrl.endsWith(node.path)}
           currentUrl={this.props.currentUrl}
           savePosition={this.savePosition.bind(this)}
+          history={this.props.history}
         />;
       }) :
       null;
