@@ -26,12 +26,12 @@
 import React, { Component, Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Alert, Button, Col, Collapse, Form, FormGroup,
-  FormText, Input, Label, Row, Table, Nav, NavItem, UncontrolledTooltip
+  Alert, Button, ButtonGroup, Col, Collapse, Form, FormGroup,
+  FormText, Input, InputGroup, Label, Row, Table, Nav, NavItem, UncontrolledTooltip
 } from "reactstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faExclamationTriangle, faInfoCircle, faTimesCircle
+  faCheck, faExclamationTriangle, faInfoCircle, faTimes, faTimesCircle
 } from "@fortawesome/free-solid-svg-icons";
 
 import { ACCESS_LEVELS } from "../../api-client";
@@ -267,6 +267,12 @@ function ProjectSettingsSessions(props) {
     />
   );
 
+  const advancedOptions = (
+    <SessionConfigAdvanced devAccess={devAccess} defaults={projectData.defaults.project}
+      options={projectData.options.unknown} setConfig={setConfig}
+    />
+  );
+
   const unknownOptions = (
     <SessionConfigUnknown devAccess={devAccess} defaults={projectData.defaults.project}
       options={projectData.options.unknown} setConfig={setConfig}
@@ -283,8 +289,134 @@ function ProjectSettingsSessions(props) {
       <NewConfigStatus {...newConfig} />
       {text}
       {knownOptions}
+      {advancedOptions}
       {unknownOptions}
     </SessionsDiv>
+  );
+}
+
+function SessionConfigAdvanced(props) {
+  // const { defaults, devAccess, options, setConfig } = props;
+  const { defaults, devAccess, options, setConfig } = props;
+  const imageAvailable = options.length && options.includes("image") ?
+    true :
+    false;
+
+  // Collapse unknown values by default when none are already assigned
+  const [showImage, setShowImage] = useState(imageAvailable);
+  const toggleShowImage = () => setShowImage(!showImage);
+
+  const warningMessage = devAccess ?
+    (<Alert color="warning">
+      <FontAwesomeIcon className="cursor-default" icon={faExclamationTriangle} color="warning" /> Changing
+      the following settings may lead to corrupted sessions.
+    </Alert>) :
+    null;
+  return (
+    <Fragment>
+      <Collapse isOpen={showImage}>
+        <h5>Advanced settings</h5>
+        {warningMessage}
+        <SessionPinnedImage
+          devAccess={devAccess}
+          setConfig={setConfig}
+          value={imageAvailable ? defaults["image"] : null}
+        />
+      </Collapse>
+      <Button color="link" className="font-italic btn-sm" onClick={toggleShowImage}>
+        [{showImage ? "Hide " : "Show "} advanced settings]
+      </Button>
+    </Fragment>
+  );
+}
+
+function SessionPinnedImage(props) {
+  const { devAccess, setConfig, value } = props;
+
+  const [modifyString, setModifyString] = useState(false);
+  const [newString, setNewString] = useState("");
+  const [modifyReference, setModifyReference] = useState(false);
+
+  const toggleModifyString = () => {
+    if (!modifyString)
+      setNewString(value ? value : "");
+    setModifyReference(false);
+    setModifyString(!modifyString);
+  };
+
+  const toggleModifyReference = () => {
+    setModifyString(false);
+    setModifyReference(!modifyReference);
+  };
+
+  // const setValue = (event) => {
+  //   // event.target.value
+  //   toggleModifyString();
+  // }
+
+  const setValue = (value = null) => {
+    console.log(value)
+    // !  UPDATE with setConfig(`${NotebooksHelper.sessionConfigPrefix}image`, value, "Docker image");
+    setConfig("image", value, "Docker image");
+  };
+
+  // if (!value) {
+
+  // }
+
+  const imageTarget = value ?
+    value :
+    "none";
+  const reset = value && devAccess ?
+    (<SessionsOptionReset onChange={() => setValue()} option="image" />) :
+    null;
+
+  const modify = devAccess && !modifyString && !modifyReference ?
+    (<ButtonGroup>
+      <Button id="button_change_image_reference" size="sm" color="outline-primary"
+        onClick={toggleModifyReference}>
+        Select reference
+      </Button>
+      <UncontrolledTooltip placement="top" target="button_change_image_reference">
+        Pick a specific branch/commit from this project
+      </UncontrolledTooltip>
+      <Button id="button_change_image_manually" size="sm" color="outline-primary"
+        onClick={toggleModifyString}>
+        Modify manually
+      </Button>
+      <UncontrolledTooltip placement="top" target="button_change_image_manually">
+        Provide a valid docker image uri
+      </UncontrolledTooltip>
+    </ButtonGroup>) :
+    null;
+
+  let imageLabel;
+  if (modifyString) {
+    imageLabel = (<Fragment>
+      <InputGroup>
+        <Input value={newString} onChange={e => setNewString(e.target.value)} />
+        <Button color="secondary" onClick={() => setValue(newString)}>
+          <FontAwesomeIcon icon={faCheck} />
+        </Button>
+        <Button color="primary" onClick={toggleModifyString}>
+          <FontAwesomeIcon icon={faTimes} />
+        </Button>
+      </InputGroup>
+    </Fragment>);
+  }
+  else if (modifyReference) {
+    imageLabel = "modifyReference";
+  }
+  else {
+    imageLabel = (<div><code>{imageTarget}</code> {reset}</div>);
+  }
+
+  return (
+    <FormGroup>
+      <Label className="me-2">Docker image:</Label>
+      {imageLabel}
+      {modify}
+    </FormGroup>
   );
 }
 
@@ -307,7 +439,11 @@ function SessionConfigKnown(props) {
 }
 
 function SessionConfigUnknown(props) {
-  const { defaults, devAccess, options, setConfig } = props;
+  const { defaults, devAccess, setConfig } = props;
+  // Remove "image" from the options since that's handled separately
+  const options = props.options.length ?
+    props.options.filter(option => option !== "image") :
+    [];
 
   const [showUnknown, setShowUnknown] = useState(false);
   const toggleShowUnknown = () => setShowUnknown(!showUnknown);
@@ -340,7 +476,7 @@ function SessionConfigUnknown(props) {
   return (
     <Fragment>
       <Collapse isOpen={showUnknown}>
-        <h4>Unrecognized settings</h4>
+        <h5>Unrecognized settings</h5>
         <p>
           The following settings are stored in the project configuration but they are not
           supported in this RenkuLab deployment.
