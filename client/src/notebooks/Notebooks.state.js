@@ -238,6 +238,7 @@ const NotebooksHelper = {
       });
     }
 
+    console.log(projectOptions)
     return projectOptions;
   },
 
@@ -447,8 +448,10 @@ class NotebooksCoordinator {
   }
 
   async fetchNotebookOptions(skip = false) {
-    if (!skip)
-      await this.fetchProjectOptions();
+    // HERE it gets the project options
+    // ! HERE - remove the following lines and invoke it separately from the container function
+    // if (!skip)
+    //   await this.fetchProjectOptions();
     const oldData = this.model.get("options.global");
     if (Object.keys(oldData).length !== 0)
       return;
@@ -461,13 +464,17 @@ class NotebooksCoordinator {
     return this.client.getNotebookServerOptions(anonymous)
       .then((globalOptions) => {
         this.model.set("options.global", globalOptions);
-        this.setDefaultOptions(globalOptions, null);
+        // this.setDefaultOptions(globalOptions, null);
 
         return globalOptions;
       });
+
+    // Set both project and global options
+    // this.setDefaultOptions(null, projectOptions);
   }
 
   // TODO: switch to the "GET config.show" API. Adapt (or remove) also the following setDefaultOptions function
+  // ! HERE - remove this, I probably just need to invoke setDefaultOptions
   async fetchProjectOptions() {
     // prepare query data and reset warnings
     const filters = this.getQueryFilters();
@@ -501,6 +508,8 @@ class NotebooksCoordinator {
           project: { $set: projectOptions }
         };
         this.model.setObject({ options: optionsObject });
+
+        console.log(projectOptions)
 
         this.setDefaultOptions(null, projectOptions);
         return projectOptions;

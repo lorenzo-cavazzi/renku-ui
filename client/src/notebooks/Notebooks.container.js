@@ -27,6 +27,8 @@ import {
 import { StatusHelper } from "../model/Model";
 import { ProjectCoordinator } from "../project";
 
+const DEFAULT_BRANCH = "master";
+
 
 /**
  * This component is needed to map properties from the redux store and keep local states cleared by the
@@ -310,7 +312,6 @@ class StartNotebookServer extends Component {
       this.setState({ first: false });
       if (this._isMounted)
         this.selectBranch();
-
     }
   }
 
@@ -321,7 +322,6 @@ class StartNotebookServer extends Component {
       await this.props.refreshBranches();
       if (this._isMounted && this.state.first)
         this.selectBranch();
-
     }
   }
 
@@ -334,8 +334,7 @@ class StartNotebookServer extends Component {
         if (oldBranch && oldBranch.branchName)
           branchName = oldBranch.branchName;
         else
-          branchName = "master";
-
+          branchName = DEFAULT_BRANCH;
         autoBranchName = true;
       }
 
@@ -357,6 +356,17 @@ class StartNotebookServer extends Component {
         }
       }
     }
+  }
+
+  async refreshProjectConfig() {
+    if (this._isMounted) {
+      if (!this.projectModel.get("config.fetching")) {
+        const commit = this.model.get("filters.commit");
+        return await this.projectCoordinator.fetchProjectConfig(this.props.externalUrl, commit.id);
+      }
+      //this.selectSomething();
+    }
+    return false;
   }
 
   async refreshCommits() {
@@ -408,7 +418,13 @@ class StartNotebookServer extends Component {
 
   async refreshPipelines() {
     if (this._isMounted) {
-      await this.coordinator.fetchNotebookOptions();
+      // ! TODO
+      const projectOptions = await this.refreshProjectConfig(); // Invoke some Notebooks.state function to set the value in the store
+      const deploymentOptions = await this.coordinator.fetchNotebookOptions();
+
+      //await this.coordinator.setDefaultOptions(globalOptions, null);
+      console.log(projectOptions, deploymentOptions)
+      await this.coordinator.setDefaultOptions();
       await this.coordinator.startPipelinePolling();
     }
   }
