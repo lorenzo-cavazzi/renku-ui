@@ -304,6 +304,7 @@ class StartNotebookServer extends Component {
     if (!this.props.blockAnonymous) {
       this.coordinator.startNotebookPolling();
       this.refreshBranches();
+      this.coordinator.fetchAutosaves();
     }
   }
 

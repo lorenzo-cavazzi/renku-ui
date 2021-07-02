@@ -380,6 +380,14 @@ const notebooksSchema = new Schema({
       fetching: { initial: false },
     }
   },
+  autosaves: {
+    schema: {
+      list: { initial: [] },
+      fetched: { initial: null },
+      fetching: { initial: false },
+      supportPvs: { initial: null },
+    }
+  },
   data: {
     schema: {
       commits: { initial: {} }, // use it as a dictionary where the key is the full commit sha

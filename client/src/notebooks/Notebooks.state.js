@@ -757,6 +757,15 @@ class NotebooksCoordinator {
     return pipelinesState;
   }
 
+  async fetchAutosaves() {
+    // get filters
+    const filters = this.getQueryFilters();
+    if (!filters.namespace || !filters.project)
+      return;
+    const autosaves = this.client.getNotebookAutosaves(filters.namespace, filters.project);
+    console.log(autosaves);
+  }
+
 
   // * Handle polling * //
   startNotebookPolling(interval = POLLING_INTERVAL) {

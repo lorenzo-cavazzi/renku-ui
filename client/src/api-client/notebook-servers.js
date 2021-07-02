@@ -129,6 +129,21 @@ function addNotebookServersMethods(client) {
       return resp.data;
     });
   };
+
+  client.getNotebookAutosaves = (namespace, project) => {
+    const headers = client.getBasicHeaders();
+    headers.append("Content-Type", "application/json");
+    const projectId = encodeURIComponent(`${namespace}/${project}`); // %2F
+    const url = `${client.baseUrl}/notebooks/${projectId}/autosave`;
+
+    return client.clientFetch(url, {
+      method: "GET",
+      headers,
+    }).then((resp) => {
+      console.log(resp.data)
+      return resp.data;
+    });
+  };
 }
 
 export default addNotebookServersMethods;
