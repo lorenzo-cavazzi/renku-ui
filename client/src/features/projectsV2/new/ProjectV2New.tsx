@@ -17,10 +17,21 @@
  */
 
 import cx from "classnames";
-import { FormEvent, useCallback, useEffect } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { generatePath, useNavigate } from "react-router-dom-v5-compat";
-import { Form, Label } from "reactstrap";
+import {
+  AccordionBody,
+  AccordionHeader,
+  AccordionItem,
+  Button,
+  Collapse,
+  Form,
+  FormText,
+  Input,
+  Label,
+  UncontrolledAccordion,
+} from "reactstrap";
 
 import { RtkErrorAlert } from "../../../components/errors/RtkErrorAlert";
 import FormSchema from "../../../components/formschema/FormSchema";
@@ -37,7 +48,18 @@ import { ProjectV2DescriptionAndRepositories } from "../show/ProjectV2Descriptio
 import ProjectFormSubmitGroup from "./ProjectV2FormSubmitGroup";
 import ProjectV2NewForm from "./ProjectV2NewForm";
 import type { NewProjectV2State } from "./projectV2New.slice";
-import { setCurrentStep } from "./projectV2New.slice";
+import { setCurrentStep, setMetadata } from "./projectV2New.slice";
+import ContainerWrap from "../../../components/container/ContainerWrap";
+import { Controller, useForm } from "react-hook-form";
+import { NewProjectForm } from "./projectV2New.types";
+import { INITIAL_PROJECT_STATE } from "./projectV2New.constants";
+import ProjectNamespaceFormField from "../fields/ProjectNamespaceFormField";
+import NameFormField from "../fields/NameFormField";
+import ProjectSlugFormField from "../fields/ProjectSlugFormField";
+import { slugFromTitle } from "../../../utils/helpers/HelperFunctions";
+import ProjectNameFormField from "../fields/ProjectNameFormField";
+import { ChevronDown } from "react-bootstrap-icons";
+import ProjectVisibilityFormField from "../fields/ProjectVisibilityFormField";
 
 function projectToProjectPost(
   project: NewProjectV2State["project"]
@@ -164,35 +186,197 @@ function ProjectV2NewReviewCreateStep({
 
 export default function ProjectV2New() {
   const user = useLegacySelector((state) => state.stateModel.user);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(setCurrentStep(0));
-  }, [dispatch]);
-  const { currentStep } = useAppSelector((state) => state.newProjectV2);
-  if (!user.logged) {
-    const textIntro = "Only authenticated users can create new projects.";
-    const textPost = "to create a new project.";
-    return (
-      <div className={cx("d-flex", "flex-column")}>
-        <h2 className={cx("mb-0", "me-2")}>New project</h2>
+  return (
+    <>
+      <h2 className="mb-3">Create a new project</h2>
+      <p>
+        A Renku project groups together data, code, and compute resources for
+        you and your collaborators.
+      </p>
+      {user.logged ? (
+        <ProjectV2CreationDetails />
+      ) : (
         <LoginAlert
           logged={user.logged}
-          textIntro={textIntro}
-          textPost={textPost}
+          textIntro="Only authenticated users can create new projects."
+          textPost="to create a new project."
         />
-      </div>
-    );
-  }
-  return (
-    <FormSchema
-      showHeader={true}
-      title="New Project"
-      description={<ProjectV2NewHeader currentStep={currentStep} />}
-    >
-      {currentStep < 3 && <ProjectV2NewForm currentStep={currentStep} />}
-      {currentStep == 3 && (
-        <ProjectV2NewReviewCreateStep currentStep={currentStep} />
       )}
-    </FormSchema>
+    </>
+  );
+}
+
+function ProjectV2CreationDetails() {
+  const [isCollapseOpen, setIsCollapseOpen] = useState(false);
+  const toggleCollapse = () => setIsCollapseOpen(!isCollapseOpen);
+
+  const dispatch = useDispatch();
+  const { project } = useAppSelector((state) => state.newProjectV2);
+  const {
+    control,
+    formState: { errors, touchedFields },
+    handleSubmit,
+    getValues,
+    setValue,
+    watch,
+  } = useForm<NewProjectForm>({
+    mode: "onChange",
+    defaultValues: INITIAL_PROJECT_STATE,
+  });
+
+  // const {
+  //   control,
+  //   formState: { errors, touchedFields },
+  //   setValue,
+  //   getValues,
+  // } = useForm<DataConnectorMountForm>({
+  //   mode: "onChange",
+  //   defaultValues: {
+  //     name: flatDataConnector.name || "",
+  //     namespace: flatDataConnector.namespace || "",
+  //     visibility: flatDataConnector.visibility || "private",
+  //     slug: flatDataConnector.slug || "",
+  //     mountPoint:
+  //       flatDataConnector.mountPoint ||
+  //       `${flatDataConnector.schema?.toLowerCase()}`,
+  //     readOnly: flatDataConnector.readOnly ?? false,
+  //     saveCredentials: cloudStorageState.saveCredentials,
+  //   },
+  // });
+
+  // const onSubmit = useCallback(
+  //   (data: NewProjectForm) => {
+  //     // dispatch(setMetadata(data));
+  //     console.log(data);
+  //     // const nextStep = (currentStep + 1) as typeof currentStep;
+  //     // dispatch(setCurrentStep(nextStep));
+  //   },
+  //   [dispatch]
+  // );
+  const onSubmit = useCallback((data: NewProjectForm) => {
+    console.log(data);
+  }, []);
+
+  // We watch for changes in the name and derive the slug from it
+  const currentName = watch("name");
+  useEffect(() => {
+    setValue("slug", slugFromTitle(currentName, true, true), {
+      shouldValidate: true,
+    });
+  }, [currentName, setValue]);
+
+  // Slug and namespace are use to show the projected URL
+  const currentNamespace = watch("namespace");
+  const currentSlug = watch("slug");
+
+  const ownerHelpText = (
+    <FormText className="input-hint">
+      The URL for this project will be{" "}
+      <span className="fw-bold">
+        renkulab.io/v2/projects/{currentNamespace || "<Owner>"}/
+        {currentSlug || "<Name>"}
+      </span>
+    </FormText>
+  );
+
+  const resetUrl = useCallback(() => {
+    setValue("slug", slugFromTitle(currentName, true, true), {
+      shouldValidate: true,
+    });
+  }, [setValue, currentName]);
+
+  return (
+    <>
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-3">
+          <ProjectNameFormField control={control} errors={errors} name="name" />
+        </div>
+
+        <div className="mb-1">
+          <ProjectNamespaceFormField
+            control={control}
+            entityName="project"
+            errors={errors}
+            helpText={ownerHelpText}
+            name="namespace"
+          />
+        </div>
+
+        <div className="mb-3">
+          <button
+            className={cx("btn", "btn-link", "p-0", "text-decoration-none")}
+            onClick={toggleCollapse}
+            type="button"
+          >
+            Customize project URL <ChevronDown className="bi" />
+          </button>
+          <Collapse isOpen={isCollapseOpen}>
+            <div
+              className={cx(
+                "align-items-center",
+                "d-flex",
+                "flex-wrap",
+                "mb-0"
+              )}
+            >
+              <span>
+                renkulab.io/v2/projects/{currentNamespace || "<Owner>"}/
+              </span>
+              <ProjectSlugFormField
+                compact={true}
+                control={control}
+                errors={errors}
+                name="slug"
+              />
+            </div>
+          </Collapse>
+
+          {errors.slug && touchedFields.slug && (
+            <div className={cx("d-block", "invalid-feedback")}>
+              <p className="mb-1">
+                You can customize the slug only with lowercase letters, numbers,
+                and hyphens.
+              </p>
+
+              {currentName ? (
+                <Button color="danger" size="sm" onClick={resetUrl}>
+                  Reset URL
+                </Button>
+              ) : (
+                <p className="mb-0">
+                  Mind the URL will be updated once you provide a name.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <div className="mb-1">
+            <ProjectVisibilityFormField
+              name="visibility"
+              control={control}
+              errors={errors}
+            />
+          </div>
+          <Label className="form-label" for="projectV2NewForm-users">
+            You can add members after creating the project.
+          </Label>
+        </div>
+
+        {/*
+        <ProjectDescriptionFormField
+          control={control}
+          errors={errors}
+          name="description"
+        />
+         */}
+        {/* <ProjectFormSubmitGroup currentStep={0} /> */}
+
+        <Button color="primary" type="submit">
+          Create
+        </Button>
+      </Form>
+    </>
   );
 }

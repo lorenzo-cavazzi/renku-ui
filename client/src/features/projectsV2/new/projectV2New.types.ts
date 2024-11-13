@@ -16,24 +16,19 @@
  * limitations under the License.
  */
 
-import type { FieldValues } from "react-hook-form";
+import { Visibility } from "../api/projectV2.api";
 
-import SlugFormField from "./SlugFormField";
-import type { GenericProjectFormFieldProps } from "./formField.types";
-
-export default function ProjectSlugFormField<T extends FieldValues>({
-  compact = false,
-  control,
-  errors,
-  name,
-}: GenericProjectFormFieldProps<T>) {
-  return (
-    <SlugFormField
-      compact={compact}
-      control={control}
-      entityName="project"
-      errors={errors}
-      name={name}
-    />
-  );
+export interface NewProjectForm {
+  name: string;
+  namespace: string;
+  slug: string;
+  visibility: Visibility;
+  members: string[];
 }
+
+export type NewProjectFormFields =
+  | "name"
+  | "namespace"
+  | "slug"
+  | "visibility"
+  | "members";
